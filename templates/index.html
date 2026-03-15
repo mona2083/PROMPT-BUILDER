@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Prompt Builder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #f0f0f0; color: #333; height: 100vh; overflow: hidden; }
+
+  .header { background: #1a1a2e; height: 56px; display: flex;
+            align-items: center; padding: 0 20px;
+            justify-content: space-between; flex-shrink: 0; }
+  .header h1 { color: #fff; font-size: 18px; font-weight: 700; }
+  .header-btns { display: flex; gap: 8px; }
+  .header-btns button { background: #e0e0e0; color: #1a1a2e; border: none;
+    border-radius: 6px; padding: 6px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 500; }
+  .header-btns button:hover { background: #cccccc; }
+  .profile-btn { background: #4a90d9 !important; color: #fff !important; }
+  .profile-btn:hover { background: #357abd !important; }
+
+  .tabs { background: #e8e8e8; display: flex; gap: 8px; padding: 7px 12px;
+          flex-shrink: 0; overflow-x: auto; }
+  .tab-btn { border: none; border-radius: 6px; padding: 7px 18px;
+             cursor: pointer; font-size: 13px; font-weight: 500;
+             background: #d0d0d0; color: #555; white-space: nowrap; }
+  .tab-btn.active { background: #4a90d9; color: #fff; }
+  .tab-btn:hover:not(.active) { background: #bbbbbb; }
+
+  .main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+          padding: 16px; height: calc(100vh - 112px); }
+
+  .card { background: #fff; border-radius: 10px; padding: 16px;
+          display: flex; flex-direction: column; overflow: hidden; }
+
+  .profile-badge { display: flex; align-items: center; gap: 8px;
+    background: #e8f0f8; border-radius: 6px; padding: 6px 10px;
+    margin-bottom: 10px; font-size: 12px; color: #357abd;
+    border: 1px solid #b8d4ee; flex-shrink: 0; }
+  .profile-badge span { flex: 1; }
+  .profile-badge-edit { background: transparent; border: none;
+    color: #4a90d9; cursor: pointer; font-size: 12px;
+    padding: 2px 6px; border-radius: 4px; }
+
+  .preset-bar { display: flex; gap: 8px; align-items: center;
+                padding: 8px 0 10px; border-bottom: 1px solid #eee;
+                margin-bottom: 8px; flex-shrink: 0; }
+  .preset-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 6px 10px; font-size: 13px; background: #f9f9f9;
+    color: #333; outline: none; cursor: pointer; }
+  .preset-btn { border: none; border-radius: 6px; padding: 6px 12px;
+    cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .preset-btn-save { background: #4a90d9; color: #fff; }
+  .preset-btn-save:hover { background: #357abd; }
+  .preset-btn-del { background: #f5f5f5; color: #cc4444; border: 1px solid #eee; }
+  .preset-btn-del:hover { background: #ffeeee; }
+
+  .form-title { font-size: 14px; font-weight: 700; color: #333;
+                margin-bottom: 4px; flex-shrink: 0; }
+  .form-scroll { overflow-y: auto; flex: 1; padding-right: 4px; }
+
+  /* コンボボックス */
+  .field-group { margin-bottom: 12px; }
+  .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px; }
+  .combo-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+  .combo-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 5px 8px; font-size: 12px; background: #f9f9f9;
+    color: #333; outline: none; cursor: pointer; }
+  .combo-select:focus { border-color: #4a90d9; }
+  .combo-save-btn { border: none; border-radius: 6px; padding: 5px 10px;
+    cursor: pointer; font-size: 11px; font-weight: 500;
+    background: #4a90d9; color: #fff; white-space: nowrap; flex-shrink: 0; }
+  .combo-save-btn:hover { background: #357abd; }
+  .combo-del-btn { border: none; border-radius: 6px; padding: 5px 8px;
+    cursor: pointer; font-size: 11px; background: #f5f5f5;
+    color: #cc4444; border: 1px solid #eee; white-space: nowrap; flex-shrink: 0; }
+  .combo-del-btn:hover { background: #ffeeee; }
+  .field-textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 10px; font-size: 12px; font-family: inherit;
+    background: #f9f9f9; color: #222; resize: vertical; outline: none; }
+  .field-textarea:focus { border-color: #4a90d9; background: #fff; }
+  .field-textarea.placeholder { color: #aaa; }
+
+  .option-row { display: flex; align-items: center; gap: 8px;
+                padding: 6px 0 2px; flex-shrink: 0; }
+  .option-row label { font-size: 12px; color: #444; cursor: pointer; }
+
+  .send-btn { background: #4a90d9; color: #fff; border: none;
+    border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 6px; width: 100%; flex-shrink: 0; }
+  .send-btn:hover { background: #357abd; }
+  .send-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 8px; }
+  .prompt-section { flex: 3; display: flex; flex-direction: column; min-height: 0; }
+  .answer-section { flex: 2; display: flex; flex-direction: column; min-height: 0; }
+  .output-header { display: flex; justify-content: space-between;
+                   align-items: center; margin-bottom: 6px; flex-shrink: 0; }
+  .output-label { font-size: 12px; font-weight: 700; color: #555; }
+  .output-btns { display: flex; gap: 6px; }
+  .output-btn { background: transparent; color: #4a90d9; border: none;
+    cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+  .output-btn:hover { background: #e8f0f8; }
+  .output-box { flex: 1; border: 1px solid #eee; border-radius: 6px;
+    padding: 10px; font-size: 12px; line-height: 1.7; background: #f9f9f9;
+    color: #444; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  .answer-box { background: #fff; color: #222; }
+
+  .status-bar { background: #e8e8e8; padding: 4px 16px; font-size: 11px;
+                color: #888; height: 28px; line-height: 20px; flex-shrink: 0; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; width: 820px;
+           max-width: 95vw; max-height: 80vh; display: flex;
+           flex-direction: column; overflow: hidden; }
+  .modal-header { background: #1a1a2e; padding: 12px 20px; display: flex;
+    justify-content: space-between; align-items: center; }
+  .modal-header h2 { color: #fff; font-size: 15px; }
+  .modal-close { background: transparent; border: none;
+    color: #fff; font-size: 20px; cursor: pointer; }
+  .modal-body { overflow-y: auto; padding: 16px; flex: 1; }
+
+  .history-card { background: #fff; border: 1px solid #ddd;
+    border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+  .history-meta { font-size: 11px; color: #888; margin-bottom: 6px;
+    display: flex; justify-content: space-between; align-items: center; }
+  .history-meta-btns { display: flex; gap: 6px; }
+  .history-preview { font-size: 12px; color: #444; line-height: 1.5; }
+  .btn-use { background: transparent; color: #4a90d9; border: none;
+    cursor: pointer; font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+  .btn-use:hover { background: #e8f0f8; }
+  .btn-delete { background: transparent; color: #cc4444; border: none;
+    cursor: pointer; font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+  .btn-delete:hover { background: #ffeeee; }
+  .btn-danger { background: #cc4444; color: #fff; border: none;
+    border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+  .btn-danger:hover { background: #aa2222; }
+
+  .profile-modal { width: 560px; }
+  .profile-field-row { display: grid; grid-template-columns: 1fr 2fr;
+    gap: 8px; align-items: center; margin-bottom: 10px; }
+  .profile-field-label { font-size: 12px; font-weight: 600; color: #555; }
+  .profile-field-input { border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 10px; font-size: 13px; width: 100%; outline: none; }
+  .profile-field-input:focus { border-color: #4a90d9; }
+  .profile-divider { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  .custom-field-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .custom-field-del { background: transparent; color: #cc4444;
+    border: none; cursor: pointer; font-size: 16px; }
+  .add-custom-row { display: flex; gap: 8px; margin-top: 8px; }
+  .add-custom-input { flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 10px; font-size: 13px; outline: none; }
+  .add-custom-input:focus { border-color: #4a90d9; }
+  .btn-add-custom { background: #4a90d9; color: #fff; border: none;
+    border-radius: 6px; padding: 7px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .btn-add-custom:hover { background: #357abd; }
+  .profile-group-tabs { display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 14px; }
+  .profile-group-tab { border: 1px solid #ddd; border-radius: 6px;
+    padding: 6px 14px; cursor: pointer; font-size: 12px;
+    background: #f5f5f5; color: #555; }
+  .profile-group-tab.active { background: #4a90d9; color: #fff;
+    border-color: #4a90d9; }
+  .profile-group-tab:hover:not(.active) { background: #e8e8e8; }
+
+  .profile-save-btn { background: #4a90d9; color: #fff; border: none;
+    border-radius: 8px; padding: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; width: 100%; margin-top: 16px; }
+  .profile-save-btn:hover { background: #357abd; }
+
+  .settings-body { padding: 20px; }
+  .settings-label { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 6px; }
+  .settings-input { width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; margin-bottom: 16px; outline: none; }
+  .settings-input:focus { border-color: #4a90d9; }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .radio-item { display: flex; align-items: center; gap: 8px;
+                font-size: 13px; cursor: pointer; }
+  .provider-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .provider-tab { border: 1px solid #ddd; border-radius: 6px; padding: 6px 16px;
+    cursor: pointer; font-size: 13px; background: #f5f5f5; color: #555; }
+  .provider-tab.active { background: #4a90d9; color: #fff; border-color: #4a90d9; }
+  .provider-section { display: none; }
+  .provider-section.active { display: block; }
+  .save-btn { background: #4a90d9; color: #fff; border: none; border-radius: 8px;
+    padding: 10px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+  .save-btn:hover { background: #357abd; }
+
+  /* AIへの指示セクション */
+  .instructions-section { border: 1px solid #e0eed8; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden; flex-shrink: 0; }
+  .instructions-header { display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px; background: #eef5e8;
+    cursor: pointer; user-select: none; }
+  .instructions-header-left { display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: #4a7c2f; }
+  .instructions-badge { background: #5a9e35; color: #fff; border-radius: 10px;
+    padding: 1px 7px; font-size: 10px; display: none; }
+  .instructions-toggle-icon { font-size: 11px; color: #888; }
+  .instructions-body { display: none; padding: 10px 12px; background: #f9fcf5; }
+  .instructions-body.open { display: block; }
+  .instructions-preset-bar { display: flex; gap: 6px; align-items: center;
+    margin-bottom: 8px; }
+  .instructions-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 6px 8px; font-size: 12px; background: #f9f9f9;
+    color: #333; outline: none; cursor: pointer; }
+  .instructions-select:focus { border-color: #5a9e35; }
+  .instructions-preset-save { border: none; border-radius: 6px;
+    padding: 5px 10px; cursor: pointer; font-size: 11px; font-weight: 500;
+    background: #5a9e35; color: #fff; white-space: nowrap; }
+  .instructions-preset-save:hover { background: #4a7c2f; }
+  .instructions-preset-del { border: 1px solid #eee; border-radius: 6px;
+    padding: 5px 8px; cursor: pointer; font-size: 11px;
+    background: #f5f5f5; color: #cc4444; white-space: nowrap; }
+  .instructions-preset-del:hover { background: #ffeeee; }
+  .instructions-textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 10px; font-size: 11px; font-family: inherit; background: #fff;
+    color: #333; resize: vertical; outline: none; line-height: 1.7;
+    min-height: 80px; max-height: 250px; }
+  .instructions-textarea:focus { border-color: #5a9e35; }
+  .instructions-hint { font-size: 11px; color: #888; margin-top: 5px; }
+
+  /* 会話履歴・背景コンテキスト */
+  .context-section { border: 1px solid #dde8f4; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden; flex-shrink: 0; }
+  .context-header { display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px; background: #e8f0f8;
+    cursor: pointer; user-select: none; }
+  .context-header-left { display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: #357abd; }
+  .context-badge { background: #4a90d9; color: #fff; border-radius: 10px;
+    padding: 1px 7px; font-size: 10px; display: none; }
+  .context-toggle-icon { font-size: 11px; color: #888; }
+  .context-body { display: none; padding: 10px 12px; background: #f9fcff; }
+  .context-body.open { display: block; }
+  .context-hint { font-size: 11px; color: #888; margin-bottom: 6px; line-height: 1.5; }
+  .context-textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 10px; font-size: 11px; font-family: inherit; background: #fff;
+    color: #333; resize: vertical; outline: none; line-height: 1.6;
+    min-height: 100px; max-height: 300px; }
+  .context-textarea:focus { border-color: #4a90d9; }
+  .context-footer { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .context-clear-btn { background: transparent; border: none; color: #cc4444;
+    font-size: 11px; cursor: pointer; padding: 2px 6px; }
+  .context-clear-btn:hover { text-decoration: underline; }
+
+  /* 指示チェックリスト */
+  .instructions-checklist-item { display: flex; align-items: flex-start;
+    gap: 8px; padding: 4px 2px; border-radius: 4px; }
+  .instructions-checklist-item:hover { background: #f0f7e8; }
+  .instructions-checklist-item input[type="checkbox"] { margin-top: 2px;
+    flex-shrink: 0; accent-color: #5a9e35; cursor: pointer; }
+  .instructions-checklist-item label { font-size: 12px; color: #333;
+    line-height: 1.5; cursor: pointer; flex: 1; }
+  .instructions-checklist-item.custom label { color: #4a7c2f; }
+  .instructions-checklist-item .inst-del { background: transparent; border: none;
+    color: #cc4444; cursor: pointer; font-size: 12px; padding: 0 4px;
+    flex-shrink: 0; opacity: 0; }
+  .instructions-checklist-item:hover .inst-del { opacity: 1; }
+  .instructions-custom-row { display: flex; gap: 6px; margin-top: 8px; }
+  .instructions-custom-input { flex: 1; border: 1px solid #ddd; border-radius: 6px;
+    padding: 6px 8px; font-size: 12px; outline: none; font-family: inherit; }
+  .instructions-custom-input:focus { border-color: #5a9e35; }
+
+  .loading { display: inline-block; width: 14px; height: 14px;
+    border: 2px solid #ccc; border-top-color: #4a90d9; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="app-title">AIプロンプトビルダー</h1>
+  <div class="header-btns">
+    <button class="profile-btn" id="profile-btn" onclick="openProfile()">共通プロフィール</button>
+    <button id="history-btn" onclick="openHistory()">履歴</button>
+    <button id="favorites-btn" onclick="openFavorites()">お気に入り</button>
+    <button id="settings-btn" onclick="openSettings()">設定</button>
+    <button id="lang-btn" onclick="toggleLang()">EN</button>
+  </div>
+</div>
+
+<div class="tabs" id="tab-bar"></div>
+
+<div class="main">
+  <div class="card">
+    <div class="profile-badge" id="profile-badge" style="display:none;">
+      <span id="profile-badge-text"></span>
+      <button class="profile-badge-edit" id="profile-edit-btn" onclick="openProfile()">編集</button>
+    </div>
+    <div class="form-title" id="form-title">AI-PM</div>
+    <div class="preset-bar">
+      <select class="preset-select" id="preset-select" onchange="onPresetSelect()">
+        <option value="">-- プリセットを選択 --</option>
+      </select>
+      <button class="preset-btn preset-btn-save" id="preset-save-btn" onclick="saveCurrentAsPreset()">+ 保存</button>
+      <button class="preset-btn preset-btn-del" id="preset-del-btn" onclick="deleteCurrentPreset()">削除</button>
+    </div>
+    <!-- AIへの指示・ルール -->
+    <div class="instructions-section">
+      <div class="instructions-header" onclick="toggleInstructions()">
+        <div class="instructions-header-left">
+          <span id="instructions-title">AIへの指示・ルール</span>
+          <span class="instructions-badge" id="instructions-badge">設定済み</span>
+        </div>
+        <span class="instructions-toggle-icon" id="instructions-toggle-icon">▶ 展開</span>
+      </div>
+      <div class="instructions-body" id="instructions-body">
+        <div class="instructions-preset-bar">
+          <select class="instructions-select" id="instructions-select"
+                  onchange="onInstructionPresetSelect()">
+            <option value="">-- プリセットを選択 --</option>
+          </select>
+          <button class="instructions-preset-save" id="instructions-save-btn" onclick="saveInstructionPreset()">+ 保存</button>
+          <button class="instructions-preset-del" id="instructions-del-btn" onclick="deleteInstructionPreset()">削除</button>
+        </div>
+        <div id="instructions-checklist"></div>
+        <div class="instructions-custom-row">
+          <input type="text" class="instructions-custom-input" id="instructions-custom-input"
+            placeholder="カスタムルールを追加...">
+          <button class="instructions-preset-save" id="inst-add-btn" onclick="addCustomInstruction()">+ 追加</button>
+        </div>
+        <div class="instructions-hint" id="instructions-hint">チェックした項目がプロンプト末尾に自動付加されます。</div>
+      </div>
+    </div>
+
+    <!-- 会話履歴・背景コンテキスト -->
+    <div class="context-section">
+      <div class="context-header" onclick="toggleContext()">
+        <div class="context-header-left">
+          <span id="context-title">会話履歴・背景コンテキスト</span>
+          <span class="context-badge" id="context-badge">入力済み</span>
+        </div>
+        <span class="context-toggle-icon" id="context-toggle-icon">▶ 展開</span>
+      </div>
+      <div class="context-body" id="context-body">
+        <p class="context-hint" id="context-hint">別のAI（ChatGPT・Claudeなど）との会話履歴や背景情報を貼り付けてください。プロンプト生成時に自動で組み込まれます。</p>
+        <textarea class="context-textarea" id="context-history"
+          placeholder="ここに会話履歴や背景情報を貼り付け..."
+          oninput="onContextInput()"></textarea>
+        <div class="context-footer">
+          <button class="context-clear-btn" id="context-clear-btn" onclick="clearContext()">クリア</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-scroll" id="form-area"></div>
+    <div class="option-row">
+      <input type="checkbox" id="send-to-api">
+      <label for="send-to-api" id="send-option-label">AIに送信して回答を取得する</label>
+    </div>
+    <div class="option-row">
+      <input type="checkbox" id="simple-mode" checked>
+      <label for="simple-mode" id="simple-mode-label">追加質問モード（質問のみ送信）</label>
+    </div>
+    <button class="send-btn" id="send-btn" onclick="onSend()">プロンプトを生成</button>
+  </div>
+
+  <div class="card right-panel">
+    <div class="prompt-section">
+      <div class="output-header">
+        <span class="output-label" id="prompt-label">▼ 生成されたプロンプト</span>
+        <div class="output-btns">
+          <button class="output-btn" id="save-prompt-btn" onclick="saveFavorite()">★ 保存</button>
+          <button class="output-btn" id="copy-prompt-btn" onclick="copyPrompt()">プロンプトをコピー</button>
+        </div>
+      </div>
+      <div class="output-box" id="prompt-box"></div>
+    </div>
+    <div class="answer-section">
+      <div class="output-header">
+        <span class="output-label" id="answer-label">▼ AIの回答</span>
+        <button class="output-btn" id="copy-answer-btn" onclick="copyAnswer()">回答をコピー</button>
+      </div>
+      <div class="output-box answer-box" id="answer-box"></div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="status-bar"></div>
+
+<!-- 共通プロフィールモーダル -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal profile-modal">
+    <div class="modal-header">
+      <h2 id="profile-modal-title">共通プロフィール</h2>
+      <button class="modal-close" onclick="closeModal('profile-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="profile-modal-hint" style="font-size:12px;color:#888;margin-bottom:14px;">ここに入力した情報は全カテゴリのプロンプトに自動で付加されます。</p>
+      <div class="profile-group-tabs" id="profile-group-tabs"></div>
+      <div id="profile-fields-area"></div>
+      <hr class="profile-divider">
+      <p id="profile-custom-label" style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px;">カスタムフィールドを追加（現在のタブに追加）</p>
+      <div class="add-custom-row">
+        <input class="add-custom-input" id="custom-label-input" placeholder="ラベル名（例: 得意分野）">
+        <button class="btn-add-custom" id="profile-add-btn" onclick="addCustomField()">+ 追加</button>
+      </div>
+      <button class="profile-save-btn" id="profile-save-btn" onclick="saveProfile()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 履歴モーダル -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="history-modal-title">履歴</h2>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-danger" id="history-clear-btn" onclick="clearAllHistory()">全削除</button>
+        <button class="modal-close" onclick="closeModal('history-modal')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="history-body"></div>
+  </div>
+</div>
+
+<!-- お気に入りモーダル -->
+<div class="modal-overlay" id="favorites-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="favorites-modal-title">お気に入り</h2>
+      <button class="modal-close" onclick="closeModal('favorites-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="favorites-body"></div>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <h2 id="settings-modal-title">設定</h2>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-label" id="settings-provider-label">AIプロバイダー</div>
+      <div class="provider-tabs">
+        <button class="provider-tab active" id="tab-gemini" onclick="switchProvider('gemini')">Gemini</button>
+        <button class="provider-tab" id="tab-openai" onclick="switchProvider('openai')">OpenAI</button>
+      </div>
+      <div class="provider-section active" id="section-gemini">
+        <div class="settings-label" id="settings-gemini-key-label">Gemini APIキー</div>
+        <input type="password" id="gemini-api-key-input" class="settings-input" placeholder="AIza...">
+        <div class="settings-label" id="settings-gemini-model-label">モデル</div>
+        <div class="radio-group" id="gemini-model-group"></div>
+      </div>
+      <div class="provider-section" id="section-openai">
+        <div class="settings-label" id="settings-openai-key-label">OpenAI APIキー</div>
+        <input type="password" id="openai-api-key-input" class="settings-input" placeholder="sk-...">
+        <div class="settings-label" id="settings-openai-model-label">モデル</div>
+        <div class="radio-group" id="openai-model-group"></div>
+      </div>
+      <button class="save-btn" id="settings-save-btn" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let lang = "ja";
+let currentCategory = "ai_pm";
+let generatedPrompt = "";
+let currentProfile = {};
+let profileFields = [];
+let currentProvider = "gemini";
+
+const UI = {
+  ja: {
+    title: "AIプロンプトビルダー", send: "送信", promptOnly: "プロンプトを生成",
+    promptLabel: "▼ 生成されたプロンプト", answerLabel: "▼ AIの回答",
+    copyPrompt: "プロンプトをコピー", copyAnswer: "回答をコピー",
+    loading: "AIに送信中...", done: "完了", langBtn: "EN",
+    sendOption: "AIに送信して回答を取得する",
+    simpleMode: "追加質問モード（質問のみ送信）",
+    errorEmpty: "質問・依頼内容を入力してください",
+    presetPlaceholder: "-- プリセットを選択 --",
+    comboPlaceholder: "-- 例から選択 --",
+    comboCustomGroup: "カスタム",
+    comboPresetGroup: "定番の選択肢",
+    saveBtnLabel: "+ 保存",
+    delBtnLabel: "削除",
+    instructionsTitle: "AIへの指示・ルール",
+    instructionsBadge: "設定済み",
+    instructionsExpand: "▶ 展開",
+    instructionsCollapse: "▼ 折りたたむ",
+    instructionsPresetPlaceholder: "-- プリセットを選択 --",
+    instructionsSave: "+ 保存",
+    instructionsDel: "削除",
+    instructionsHint: "チェックした項目がプロンプト末尾に自動付加されます。",
+    contextTitle: "会話履歴・背景コンテキスト",
+    contextBadge: "入力済み",
+    contextExpand: "▶ 展開",
+    contextCollapse: "▼ 折りたたむ",
+    contextHint: "別のAI（ChatGPT・Claudeなど）との会話履歴や背景情報を貼り付けてください。プロンプト生成時に自動で組み込まれます。",
+    contextPlaceholder: "ここに会話履歴や背景情報を貼り付け...",
+    contextClear: "クリア",
+    profileBtn: "共通プロフィール",
+    historyBtn: "履歴",
+    favoritesBtn: "お気に入り",
+    settingsBtn: "設定",
+    profileEditBtn: "編集",
+    profileModalTitle: "共通プロフィール",
+    profileModalHint: "ここに入力した情報は全カテゴリのプロンプトに自動で付加されます。",
+    profileCustomLabel: "カスタムフィールドを追加（現在のタブに追加）",
+    profileAddBtn: "+ 追加",
+    profileSaveBtn: "保存",
+    historyModalTitle: "履歴",
+    historyClearAll: "全削除",
+    favoritesModalTitle: "お気に入り",
+    settingsModalTitle: "設定",
+    settingsProvider: "AIプロバイダー",
+    settingsGeminiKey: "Gemini APIキー",
+    settingsModel: "モデル",
+    settingsOpenAIKey: "OpenAI APIキー",
+    settingsSaveBtn: "保存",
+    savePromptBtn: "★ 保存",
+    instAddBtn: "+ 追加",
+    historyUse: "プロンプトを使う",
+    historyDelete: "削除",
+    favUse: "プロンプトを使う",
+    favDelete: "削除",
+  },
+  en: {
+    title: "AI Prompt Builder", send: "Send", promptOnly: "Generate Prompt",
+    promptLabel: "▼ Generated Prompt", answerLabel: "▼ AI Answer",
+    copyPrompt: "Copy Prompt", copyAnswer: "Copy Answer",
+    loading: "Sending to AI...", done: "Done", langBtn: "JA",
+    sendOption: "Send to AI and get answer",
+    simpleMode: "Follow-up mode (question only)",
+    errorEmpty: "Please enter your question / request",
+    presetPlaceholder: "-- Select Preset --",
+    comboPlaceholder: "-- Select from examples --",
+    comboCustomGroup: "Custom",
+    comboPresetGroup: "Preset options",
+    saveBtnLabel: "+ Save",
+    delBtnLabel: "Delete",
+    instructionsTitle: "AI Instructions & Rules",
+    instructionsBadge: "Active",
+    instructionsExpand: "▶ Expand",
+    instructionsCollapse: "▼ Collapse",
+    instructionsPresetPlaceholder: "-- Select Preset --",
+    instructionsSave: "+ Save",
+    instructionsDel: "Delete",
+    instructionsHint: "Checked items will be appended to the prompt automatically.",
+    contextTitle: "Conversation History / Context",
+    contextBadge: "Filled",
+    contextExpand: "▶ Expand",
+    contextCollapse: "▼ Collapse",
+    contextHint: "Paste conversation history from another AI (ChatGPT, Claude, etc.) or background info here.",
+    contextPlaceholder: "Paste conversation history or background info here...",
+    contextClear: "Clear",
+    profileBtn: "Profile",
+    historyBtn: "History",
+    favoritesBtn: "Favorites",
+    settingsBtn: "Settings",
+    profileEditBtn: "Edit",
+    profileModalTitle: "Common Profile",
+    profileModalHint: "This information will be automatically added to all category prompts.",
+    profileCustomLabel: "Add custom field (to current tab)",
+    profileAddBtn: "+ Add",
+    profileSaveBtn: "Save",
+    historyModalTitle: "History",
+    historyClearAll: "Clear All",
+    favoritesModalTitle: "Favorites",
+    settingsModalTitle: "Settings",
+    settingsProvider: "AI Provider",
+    settingsGeminiKey: "Gemini API Key",
+    settingsModel: "Model",
+    settingsOpenAIKey: "OpenAI API Key",
+    settingsSaveBtn: "Save",
+    savePromptBtn: "★ Save",
+    instAddBtn: "+ Add",
+    historyUse: "Use Prompt",
+    historyDelete: "Delete",
+    favUse: "Use Prompt",
+    favDelete: "Delete",
+  }
+};
+
+const CATEGORIES = {
+  ja: ["AI-PM", "コード", "生活・健康", "大学勉強", "語学学習", "チャット", "レシピ", "その他"],
+  en: ["AI-PM", "Code", "Health & Life", "Study", "Language", "Chat", "Recipe", "Other"],
+};
+const CAT_KEY_MAP = {
+  "AI-PM": "ai_pm", "コード": "code", "Code": "code",
+  "生活・健康": "health", "Health & Life": "health",
+  "大学勉強": "study", "Study": "study",
+  "語学学習": "language", "Language": "language",
+  "チャット": "chat", "Chat": "chat",
+  "レシピ": "recipe", "Recipe": "recipe",
+  "その他": "other", "Other": "other",
+};
+const CAT_LABELS = {
+  ai_pm:    { ja: "AI-PM",      en: "AI-PM" },
+  code:     { ja: "コード",     en: "Code" },
+  health:   { ja: "生活・健康", en: "Health & Life" },
+  study:    { ja: "大学勉強",   en: "Study" },
+  language: { ja: "語学学習",   en: "Language" },
+  chat:     { ja: "チャット",   en: "Chat" },
+  recipe:   { ja: "レシピ",     en: "Recipe" },
+  other:    { ja: "その他",     en: "Other" },
+};
+
+window.onload = async () => {
+  await loadProfileData();
+  await loadInstructionPresets();
+  buildTabs();
+  await loadCategory(currentCategory);
+  await refreshPresets();
+  await loadSettingsUI();
+  updateSendBtn();
+};
+
+function buildTabs() {
+  const bar = document.getElementById("tab-bar");
+  bar.innerHTML = "";
+  CATEGORIES[lang].forEach(name => {
+    const key = CAT_KEY_MAP[name];
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (key === currentCategory ? " active" : "");
+    btn.textContent = name;
+    btn.onclick = () => onTabClick(key);
+    bar.appendChild(btn);
+  });
+}
+
+async function onTabClick(key) {
+  currentCategory = key;
+  buildTabs();
+  await loadCategory(key);
+  await refreshPresets();
+  clearOutputs();
+}
+
+// カスタム選択肢キャッシュ
+let customOptionsCache = {};
+
+async function loadAllCustomOptions() {
+  const res = await fetch("/api/custom_options_all");
+  const data = await res.json();
+  customOptionsCache = data.custom_options || {};
+}
+
+async function loadCategory(key) {
+  await loadAllCustomOptions();
+  const res = await fetch(`/api/fields?category=${key}&lang=${lang}`);
+  const data = await res.json();
+  document.getElementById("form-title").textContent = CAT_LABELS[key][lang];
+  const area = document.getElementById("form-area");
+  area.innerHTML = "";
+
+  data.fields.forEach(([fieldKey, label, placeholder, required, options]) => {
+    const ui = UI[lang];
+    const group = document.createElement("div");
+    group.className = "field-group";
+    group.dataset.fieldKey = fieldKey;
+
+    const lbl = document.createElement("div");
+    lbl.className = "field-label";
+    lbl.textContent = label;
+    group.appendChild(lbl);
+
+    // プルダウンがある場合のみコンボボックス表示
+    const customOpts = customOptionsCache[fieldKey] || [];
+    if (options.length > 0 || customOpts.length > 0) {
+      const comboRow = document.createElement("div");
+      comboRow.className = "combo-row";
+
+      const sel = document.createElement("select");
+      sel.className = "combo-select";
+
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = ui.comboPlaceholder;
+      sel.appendChild(defaultOpt);
+
+      if (options.length > 0) {
+        const grp = document.createElement("optgroup");
+        grp.label = ui.comboPresetGroup;
+        options.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt;
+          o.textContent = opt;
+          grp.appendChild(o);
+        });
+        sel.appendChild(grp);
+      }
+
+      if (customOpts.length > 0) {
+        const cgrp = document.createElement("optgroup");
+        cgrp.label = ui.comboCustomGroup;
+        cgrp.id = `custom-grp-${fieldKey}`;
+        customOpts.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt;
+          o.textContent = opt;
+          o.dataset.custom = "1";
+          cgrp.appendChild(o);
+        });
+        sel.appendChild(cgrp);
+      }
+
+      sel.onchange = () => {
+        if (sel.value) {
+          const ta = group.querySelector(".field-textarea");
+          ta.value = sel.value;
+          ta.classList.remove("placeholder");
+          sel.value = "";
+        }
+      };
+      comboRow.appendChild(sel);
+
+      const saveBtn = document.createElement("button");
+      saveBtn.className = "combo-save-btn";
+      saveBtn.textContent = ui.saveBtnLabel;
+      saveBtn.title = "入力内容を選択肢に保存";
+      saveBtn.onclick = () => saveComboOption(fieldKey, group, sel);
+      comboRow.appendChild(saveBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "combo-del-btn";
+      delBtn.textContent = ui.delBtnLabel;
+      delBtn.title = "選択中のカスタム選択肢を削除";
+      delBtn.onclick = () => deleteComboOption(fieldKey, sel);
+      comboRow.appendChild(delBtn);
+
+      group.appendChild(comboRow);
+    }
+
+    const isMulti = ["question", "error", "background", "goal", "purpose"].includes(fieldKey);
+    const ta = document.createElement("textarea");
+    ta.className = "field-textarea placeholder";
+    ta.rows = isMulti ? 3 : 2;
+    ta.value = placeholder;
+    ta.dataset.placeholder = placeholder;
+    ta.dataset.fieldKey = fieldKey;
+    ta.dataset.required = required;
+
+    ta.addEventListener("focus", () => {
+      if (ta.value === placeholder) {
+        ta.value = "";
+        ta.classList.remove("placeholder");
+      }
+    });
+    ta.addEventListener("blur", () => {
+      if (!ta.value.trim()) {
+        ta.value = placeholder;
+        ta.classList.add("placeholder");
+      }
+    });
+    group.appendChild(ta);
+    area.appendChild(group);
+  });
+}
+
+async function saveComboOption(fieldKey, group, sel) {
+  const ta = group.querySelector(".field-textarea");
+  const value = ta.classList.contains("placeholder") ? "" : ta.value.trim();
+  if (!value) { setStatus("保存する内容を入力してください"); return; }
+
+  await fetch("/api/save_custom_option", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ field_key: fieldKey, value })
+  });
+
+  // カスタムグループに追加
+  let cgrp = sel.querySelector(`#custom-grp-${fieldKey}`);
+  if (!cgrp) {
+    cgrp = document.createElement("optgroup");
+    cgrp.label = UI[lang].comboCustomGroup;
+    cgrp.id = `custom-grp-${fieldKey}`;
+    sel.appendChild(cgrp);
+  }
+  const existing = Array.from(cgrp.options || cgrp.querySelectorAll("option"))
+    .map(o => o.value);
+  if (!existing.includes(value)) {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = value;
+    o.dataset.custom = "1";
+    cgrp.appendChild(o);
+  }
+  customOptionsCache[fieldKey] = customOptionsCache[fieldKey] || [];
+  if (!customOptionsCache[fieldKey].includes(value)) {
+    customOptionsCache[fieldKey].push(value);
+  }
+  setStatus("選択肢に保存しました: " + value);
+}
+
+async function deleteComboOption(fieldKey, sel) {
+  const selectedOpt = sel.options[sel.selectedIndex];
+  if (!selectedOpt || !selectedOpt.value || !selectedOpt.dataset.custom) {
+    setStatus("削除するにはカスタム選択肢を選んでください");
+    return;
+  }
+  const value = selectedOpt.value;
+  if (!confirm(`「${value}」を削除しますか？`)) return;
+
+  await fetch("/api/delete_custom_option", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ field_key: fieldKey, value })
+  });
+  selectedOpt.remove();
+  setStatus("削除しました");
+}
+
+// ────────────────────────────────────────────
+// AIへの指示・ルール
+// ────────────────────────────────────────────
+let instructionPresets = {};
+let customInstructions = []; // ユーザーが追加したカスタムルール
+
+async function loadInstructionPresets() {
+  const ui = UI[lang];
+  const res = await fetch("/api/instruction_presets");
+  const data = await res.json();
+  instructionPresets = data.presets || {};
+  const sel = document.getElementById("instructions-select");
+  sel.innerHTML = '<option value="">' + ui.instructionsPresetPlaceholder + '</option>';
+  Object.entries(instructionPresets).forEach(([key, preset]) => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    // name が辞書形式（{ja, en}）の場合は言語に応じて表示
+    const name = preset.name;
+    opt.textContent = (name && typeof name === "object")
+      ? (name[lang] || name["en"] || name["ja"] || key)
+      : (name || key);
+    opt.dataset.isDefault = !key.startsWith("custom_") ? "1" : "0";
+    sel.appendChild(opt);
+  });
+}
+
+function getInstText(inst) {
+  // inst が {ja, en} 辞書の場合は現在の言語で表示、文字列の場合はそのまま
+  if (inst && typeof inst === "object") {
+    return inst[lang] || inst["en"] || inst["ja"] || "";
+  }
+  return inst || "";
+}
+
+function renderInstructionsChecklist(instructions) {
+  const list = document.getElementById("instructions-checklist");
+  list.innerHTML = "";
+  instructions.forEach((inst, idx) => {
+    const text = getInstText(inst);
+    if (!text) return;
+    const item = document.createElement("div");
+    item.className = "instructions-checklist-item";
+    item.dataset.instJa = (inst && typeof inst === "object") ? (inst["ja"] || text) : text;
+    item.dataset.instEn = (inst && typeof inst === "object") ? (inst["en"] || text) : text;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "inst-" + idx;
+    cb.checked = true;
+    cb.addEventListener("change", updateInstructionsBadge);
+    const lbl = document.createElement("label");
+    lbl.htmlFor = "inst-" + idx;
+    lbl.textContent = text;
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    list.appendChild(item);
+  });
+  // カスタムルールも追加
+  customInstructions.forEach((inst, idx) => {
+    const text = getInstText(inst);
+    const item = document.createElement("div");
+    item.className = "instructions-checklist-item custom";
+    item.dataset.instJa = text;
+    item.dataset.instEn = text;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "inst-custom-" + idx;
+    cb.checked = true;
+    cb.addEventListener("change", updateInstructionsBadge);
+    const lbl = document.createElement("label");
+    lbl.htmlFor = "inst-custom-" + idx;
+    lbl.textContent = text;
+    const delBtn = document.createElement("button");
+    delBtn.className = "inst-del";
+    delBtn.textContent = "✕";
+    delBtn.onclick = () => {
+      customInstructions.splice(idx, 1);
+      renderInstructionsChecklist(getCurrentPresetInstructions());
+    };
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    item.appendChild(delBtn);
+    list.appendChild(item);
+  });
+  updateInstructionsBadge();
+}
+
+function refreshInstructionsLang() {
+  // 言語切り替え時にチェックリストのテキストを更新
+  const items = document.querySelectorAll("#instructions-checklist .instructions-checklist-item");
+  items.forEach(item => {
+    const lbl = item.querySelector("label");
+    if (lbl) {
+      lbl.textContent = lang === "ja"
+        ? (item.dataset.instJa || lbl.textContent)
+        : (item.dataset.instEn || lbl.textContent);
+    }
+  });
+}
+
+function getCurrentPresetInstructions() {
+  const sel = document.getElementById("instructions-select");
+  const key = sel.value;
+  if (key && instructionPresets[key]) return instructionPresets[key].instructions;
+  return [];
+}
+
+function updateInstructionsBadge() {
+  const checked = document.querySelectorAll("#instructions-checklist input[type=checkbox]:checked");
+  document.getElementById("instructions-badge").style.display =
+    checked.length > 0 ? "inline" : "none";
+}
+
+function onInstructionPresetSelect() {
+  const instructions = getCurrentPresetInstructions();
+  renderInstructionsChecklist(instructions);
+}
+
+function addCustomInstruction() {
+  const inp = document.getElementById("instructions-custom-input");
+  const val = inp.value.trim();
+  if (!val) return;
+  customInstructions.push(val);
+  inp.value = "";
+  renderInstructionsChecklist(getCurrentPresetInstructions());
+}
+
+function toggleInstructions() {
+  const ui = UI[lang];
+  const body = document.getElementById("instructions-body");
+  const icon = document.getElementById("instructions-toggle-icon");
+  body.classList.toggle("open");
+  icon.textContent = body.classList.contains("open") ? ui.instructionsCollapse : ui.instructionsExpand;
+}
+
+function getInstructions() {
+  const items = document.querySelectorAll("#instructions-checklist .instructions-checklist-item");
+  const lines = [];
+  items.forEach(item => {
+    const cb = item.querySelector("input[type=checkbox]");
+    if (cb && cb.checked) {
+      // Always send English version to AI for better instruction following
+      const text = item.dataset.instEn || item.querySelector("label")?.textContent.trim() || "";
+      if (text) lines.push(text);
+    }
+  });
+  return lines.join("\n");
+}
+
+async function saveInstructionPreset() {
+  const items = document.querySelectorAll("#instructions-checklist .instructions-checklist-item");
+  const allInstructions = [];
+  items.forEach(item => {
+    const lbl = item.querySelector("label");
+    if (lbl) allInstructions.push(lbl.textContent.trim());
+  });
+  if (allInstructions.length === 0) {
+    setStatus("保存する指示がありません");
+    return;
+  }
+  const name = prompt("プリセット名を入力してください:", "");
+  if (!name || !name.trim()) return;
+  const key = "custom_" + Date.now();
+  await fetch("/api/save_instruction_preset", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, name: name.trim(), instructions: allInstructions })
+  });
+  await loadInstructionPresets();
+  setStatus("プリセット「" + name.trim() + "」を保存しました");
+}
+
+async function deleteInstructionPreset() {
+  const sel = document.getElementById("instructions-select");
+  const key = sel.value;
+  if (!key) { setStatus("削除するプリセットを選択してください"); return; }
+  const opt = sel.options[sel.selectedIndex];
+  if (opt.dataset.isDefault === "1") {
+    setStatus("デフォルトプリセットは削除できません");
+    return;
+  }
+  if (!confirm(opt.textContent + " を削除しますか？")) return;
+  await fetch("/api/delete_instruction_preset", {
+    method: "DELETE", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key })
+  });
+  customInstructions = [];
+  document.getElementById("instructions-checklist").innerHTML = "";
+  updateInstructionsBadge();
+  await loadInstructionPresets();
+  setStatus("削除しました");
+}
+
+// ────────────────────────────────────────────
+// 会話履歴・背景コンテキスト
+// ────────────────────────────────────────────
+function toggleContext() {
+  const ui = UI[lang];
+  const body = document.getElementById("context-body");
+  const icon = document.getElementById("context-toggle-icon");
+  body.classList.toggle("open");
+  icon.textContent = body.classList.contains("open") ? ui.contextCollapse : ui.contextExpand;
+}
+
+function onContextInput() {
+  const val = document.getElementById("context-history").value.trim();
+  document.getElementById("context-badge").style.display = val ? "inline" : "none";
+}
+
+function clearContext() {
+  document.getElementById("context-history").value = "";
+  document.getElementById("context-badge").style.display = "none";
+}
+
+function getContextHistory() {
+  return document.getElementById("context-history").value.trim();
+}
+
+function updateSendBtn() {
+  const sendToApi = document.getElementById("send-to-api").checked;
+  document.getElementById("send-btn").textContent =
+    sendToApi ? UI[lang].send : UI[lang].promptOnly;
+}
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("send-to-api").addEventListener("change", updateSendBtn);
+});
+
+async function loadProfileData() {
+  const res = await fetch("/api/profile");
+  const data = await res.json();
+  currentProfile = data.profile;
+  profileFields = data.fields;
+  profileGroupLabels = data.group_labels || {};
+  profileGroupKeys = data.group_keys || ["common","tech","life","study"];
+  updateProfileBadge();
+}
+
+function updateProfileBadge() {
+  const badge = document.getElementById("profile-badge");
+  const text = document.getElementById("profile-badge-text");
+  // common グループの入力済み項目を表示
+  const common = (currentProfile && currentProfile.common) ? currentProfile.common : {};
+  const filled = Object.entries(common).filter(([k,v]) => v && v.trim());
+  if (filled.length > 0) {
+    const preview = filled.slice(0, 2).map(([k,v]) => v).join(" / ");
+    const badgePrefix = lang === "ja" ? "プロフィール設定済み: " : "Profile set: ";
+    text.textContent = badgePrefix + preview + (filled.length > 2 ? " ..." : "");
+    badge.style.display = "flex";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+let currentProfileGroup = "common";
+let profileGroupLabels = {};
+let profileGroupKeys = [];
+
+async function openProfile() {
+  await loadProfileData();
+  renderProfileGroupTabs();
+  renderProfileFields(currentProfileGroup);
+  document.getElementById("profile-modal").classList.add("open");
+}
+
+function saveCurrentTabInputs() {
+  // 現在表示中のタブの入力値をcurrentProfileに一時保存
+  const inputs = document.querySelectorAll(".profile-field-input");
+  inputs.forEach(inp => {
+    const g = inp.dataset.group;
+    const k = inp.dataset.key;
+    if (g && k) {
+      if (!currentProfile[g]) currentProfile[g] = {};
+      currentProfile[g][k] = inp.value;
+    }
+  });
+}
+
+function getGroupLabel(group) {
+  const lbl = profileGroupLabels[group];
+  if (lbl && typeof lbl === "object") return lbl[lang] || lbl["ja"] || group;
+  return lbl || group;
+}
+
+function renderProfileGroupTabs() {
+  const tabBar = document.getElementById("profile-group-tabs");
+  tabBar.innerHTML = "";
+  profileGroupKeys.forEach(group => {
+    const btn = document.createElement("button");
+    btn.className = "profile-group-tab" + (group === currentProfileGroup ? " active" : "");
+    btn.textContent = getGroupLabel(group);
+    btn.onclick = () => {
+      saveCurrentTabInputs();
+      currentProfileGroup = group;
+      renderProfileGroupTabs();
+      renderProfileFields(group);
+    };
+    tabBar.appendChild(btn);
+  });
+}
+
+function renderProfileFields(group) {
+  const area = document.getElementById("profile-fields-area");
+  area.innerHTML = "";
+  const fields = profileFields[group] || [];
+  const groupData = (currentProfile[group]) || {};
+  const customKeys = (currentProfile._custom_fields || {})[group] || [];
+  const defaultKeys = fields.filter(f => !customKeys.find(c => c.key === f[0])).map(f => f[0]);
+
+  fields.forEach(([key, label, placeholder]) => {
+    const row = document.createElement("div");
+    row.className = "profile-field-row";
+
+    const lbl = document.createElement("div");
+    lbl.className = "profile-field-label";
+    // label が {ja, en} 辞書の場合は言語に応じて表示
+    lbl.textContent = (label && typeof label === "object")
+      ? (label[lang] || label["ja"] || key)
+      : label;
+
+    const inp = document.createElement("input");
+    inp.className = "profile-field-input";
+    inp.type = "text";
+    inp.dataset.key = key;
+    inp.dataset.group = group;
+    inp.value = groupData[key] || "";
+    const labelText = (label && typeof label === "object") ? (label[lang] || label["ja"] || key) : label;
+    const phText = (placeholder && typeof placeholder === "object") ? (placeholder[lang] || placeholder["ja"] || "") : (placeholder || "");
+    inp.placeholder = phText || labelText;
+
+    const isCustom = !defaultKeys.includes(key);
+    if (isCustom) {
+      const delBtn = document.createElement("button");
+      delBtn.className = "custom-field-del";
+      delBtn.textContent = "✕";
+      delBtn.onclick = () => deleteCustomField(group, key);
+      const wrapper = document.createElement("div");
+      wrapper.className = "custom-field-row";
+      wrapper.appendChild(inp);
+      wrapper.appendChild(delBtn);
+      row.appendChild(lbl);
+      row.appendChild(wrapper);
+    } else {
+      row.appendChild(lbl);
+      row.appendChild(inp);
+    }
+    area.appendChild(row);
+  });
+}
+
+async function addCustomField() {
+  const labelInput = document.getElementById("custom-label-input");
+  const label = labelInput.value.trim();
+  if (!label) { setStatus("ラベル名を入力してください"); return; }
+  const key = "custom_" + Date.now();
+  saveCurrentTabInputs();  // 入力値を保持してから追加
+  await fetch("/api/add_profile_field", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ group: currentProfileGroup, key, label })
+  });
+  labelInput.value = "";
+  // サーバーからフィールド定義だけ更新、入力値はcurrentProfileから復元
+  const res = await fetch("/api/profile");
+  const data = await res.json();
+  profileFields = data.fields;
+  profileGroupLabels = data.group_labels || {};
+  profileGroupKeys = data.group_keys || ["common","tech","life","study"];
+  renderProfileGroupTabs();
+  renderProfileFields(currentProfileGroup);
+  setStatus("フィールドを追加しました");
+}
+
+async function deleteCustomField(group, key) {
+  if (!confirm("このカスタムフィールドを削除しますか？")) return;
+  await fetch("/api/delete_profile_field", {
+    method: "DELETE", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ group, key })
+  });
+  await loadProfileData();
+  renderProfileGroupTabs();
+  renderProfileFields(currentProfileGroup);
+  setStatus("フィールドを削除しました");
+}
+
+async function saveProfile() {
+  const inputs = document.querySelectorAll(".profile-field-input");
+  const profile = JSON.parse(JSON.stringify(currentProfile));
+  profileGroupKeys.forEach(g => { if (!profile[g]) profile[g] = {}; });
+  inputs.forEach(inp => {
+    const g = inp.dataset.group;
+    const k = inp.dataset.key;
+    if (g && k) {
+      if (!profile[g]) profile[g] = {};
+      profile[g][k] = inp.value.trim();
+    }
+  });
+  await fetch("/api/save_profile", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profile })
+  });
+  currentProfile = profile;
+  updateProfileBadge();
+  closeModal("profile-modal");
+  setStatus("プロフィールを保存しました");
+}
+
+async function refreshPresets() {
+  const res = await fetch(`/api/presets?category=${currentCategory}`);
+  const data = await res.json();
+  const sel = document.getElementById("preset-select");
+  sel.innerHTML = `<option value="">${UI[lang].presetPlaceholder}</option>`;
+  data.presets.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    opt.dataset.fields = JSON.stringify(p.fields);
+    sel.appendChild(opt);
+  });
+}
+
+function onPresetSelect() {
+  const sel = document.getElementById("preset-select");
+  const selected = sel.options[sel.selectedIndex];
+  if (!selected.value) return;
+  const fields = JSON.parse(selected.dataset.fields);
+  document.querySelectorAll(".field-textarea").forEach(ta => {
+    const key = ta.dataset.fieldKey;
+    if (fields[key] !== undefined && fields[key] !== "") {
+      ta.value = fields[key];
+      ta.classList.remove("placeholder");
+    }
+  });
+  setStatus("プリセットを読み込みました");
+}
+
+async function saveCurrentAsPreset() {
+  const name = prompt("プリセット名を入力してください:", "");
+  if (!name || !name.trim()) return;
+  const fields = {};
+  document.querySelectorAll(".field-textarea").forEach(ta => {
+    fields[ta.dataset.fieldKey] = ta.classList.contains("placeholder") ? "" : ta.value.trim();
+  });
+  await fetch("/api/save_preset", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category: currentCategory, name: name.trim(), fields })
+  });
+  await refreshPresets();
+  setStatus("プリセット「" + name.trim() + "」を保存しました");
+}
+
+async function deleteCurrentPreset() {
+  const sel = document.getElementById("preset-select");
+  const presetId = sel.value;
+  const presetName = sel.options[sel.selectedIndex]?.textContent;
+  if (!presetId) { setStatus("削除するプリセットを選択してください"); return; }
+  if (!confirm(`「${presetName}」を削除しますか？`)) return;
+  await fetch("/api/delete_preset", {
+    method: "DELETE", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category: currentCategory, preset_id: presetId })
+  });
+  await refreshPresets();
+  setStatus("プリセットを削除しました");
+}
+
+async function onSend() {
+  const ui = UI[lang];
+  const textareas = document.querySelectorAll(".field-textarea");
+  const userInputs = {};
+  let valid = true;
+  textareas.forEach(ta => {
+    const key = ta.dataset.fieldKey;
+    const val = ta.classList.contains("placeholder") ? "" : ta.value.trim();
+    userInputs[key] = val;
+    if (ta.dataset.required === "true" && !val) valid = false;
+  });
+  if (!valid) { setStatus(ui.errorEmpty); return; }
+
+  const simpleMode = document.getElementById("simple-mode").checked;
+  const res = await fetch("/api/build_prompt", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      category: currentCategory, lang, user_inputs: userInputs,
+      profile: currentProfile, simple_mode: simpleMode,
+      context_history: getContextHistory(),
+      instructions: getInstructions()
+    })
+  });
+  const data = await res.json();
+  generatedPrompt = data.prompt;
+  document.getElementById("prompt-box").textContent = generatedPrompt;
+
+  await fetch("/api/save_history", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category: currentCategory, lang, prompt: generatedPrompt, answer: "" })
+  });
+
+  const sendToApi = document.getElementById("send-to-api").checked;
+  if (!sendToApi) { setStatus("プロンプトを生成しました"); return; }
+
+  setStatus('<span class="loading"></span>' + ui.loading, true);
+  document.getElementById("send-btn").disabled = true;
+
+  try {
+    const gRes = await fetch("/api/ask_ai", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: generatedPrompt })
+    });
+    const gData = await gRes.json();
+    if (gData.error) { setStatus("エラー: " + gData.error); }
+    else { document.getElementById("answer-box").textContent = gData.answer; setStatus(ui.done); }
+  } catch (e) {
+    setStatus("通信エラー: " + e.message);
+  } finally {
+    document.getElementById("send-btn").disabled = false;
+  }
+}
+
+function updateStaticLabels() {
+  const ui = UI[lang];
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const setph = (id, text) => { const el = document.getElementById(id); if (el) el.placeholder = text; };
+
+  // Header
+  set("app-title", ui.title);
+  set("lang-btn", ui.langBtn);
+  set("profile-btn", ui.profileBtn);
+  set("history-btn", ui.historyBtn);
+  set("favorites-btn", ui.favoritesBtn);
+  set("settings-btn", ui.settingsBtn);
+
+  // Main panel
+  set("profile-edit-btn", ui.profileEditBtn);
+  set("preset-save-btn", ui.saveBtnLabel);
+  set("preset-del-btn", ui.delBtnLabel);
+  set("prompt-label", ui.promptLabel);
+  set("save-prompt-btn", ui.savePromptBtn);
+  set("copy-prompt-btn", ui.copyPrompt);
+  set("answer-label", ui.answerLabel);
+  set("copy-answer-btn", ui.copyAnswer);
+  set("send-option-label", ui.sendOption);
+  set("simple-mode-label", ui.simpleMode);
+
+  // Instructions section
+  set("instructions-title", ui.instructionsTitle);
+  set("instructions-badge", ui.instructionsBadge);
+  set("instructions-save-btn", ui.instructionsSave);
+  set("instructions-del-btn", ui.instructionsDel);
+  set("instructions-hint", ui.instructionsHint);
+  set("inst-add-btn", ui.instAddBtn);
+  setph("instructions-custom-input", lang === "ja" ? "カスタムルールを追加..." : "Add custom rule...");
+  const instrSel = document.getElementById("instructions-select");
+  if (instrSel && instrSel.options[0]) instrSel.options[0].textContent = ui.instructionsPresetPlaceholder;
+
+  // Context section
+  set("context-title", ui.contextTitle);
+  set("context-badge", ui.contextBadge);
+  set("context-hint", ui.contextHint);
+  setph("context-history", ui.contextPlaceholder);
+  set("context-clear-btn", ui.contextClear);
+
+  // Profile modal
+  set("profile-modal-title", ui.profileModalTitle);
+  set("profile-modal-hint", ui.profileModalHint);
+  set("profile-custom-label", ui.profileCustomLabel);
+  set("profile-add-btn", ui.profileAddBtn);
+  set("profile-save-btn", ui.profileSaveBtn);
+
+  // History modal
+  set("history-modal-title", ui.historyModalTitle);
+  set("history-clear-btn", ui.historyClearAll);
+
+  // Favorites modal
+  set("favorites-modal-title", ui.favoritesModalTitle);
+
+  // Settings modal
+  set("settings-modal-title", ui.settingsModalTitle);
+  set("settings-provider-label", ui.settingsProvider);
+  set("settings-gemini-key-label", ui.settingsGeminiKey);
+  set("settings-gemini-model-label", ui.settingsModel);
+  set("settings-openai-key-label", ui.settingsOpenAIKey);
+  set("settings-openai-model-label", ui.settingsModel);
+  set("settings-save-btn", ui.settingsSaveBtn);
+
+  // Preset select placeholder
+  const presetSel = document.getElementById("preset-select");
+  if (presetSel && presetSel.options[0]) presetSel.options[0].textContent = ui.presetPlaceholder;
+
+  loadInstructionPresets();
+  refreshInstructionsLang();
+  // Re-render profile tabs with new language
+  if (document.getElementById('profile-modal').classList.contains('open')) {
+    renderProfileGroupTabs();
+    renderProfileFields(currentProfileGroup);
+  } else {
+    renderProfileGroupTabs();
+  }
+}
+
+function toggleLang() {
+  lang = lang === "ja" ? "en" : "ja";
+  updateStaticLabels();
+  updateSendBtn();
+  buildTabs();
+  loadCategory(currentCategory);
+  refreshPresets();
+  clearOutputs();
+}
+
+function switchProvider(provider) {
+  currentProvider = provider;
+  document.querySelectorAll(".provider-tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".provider-section").forEach(s => s.classList.remove("active"));
+  document.getElementById("tab-" + provider).classList.add("active");
+  document.getElementById("section-" + provider).classList.add("active");
+}
+
+async function loadSettingsUI() {
+  const res = await fetch("/api/settings");
+  const data = await res.json();
+  document.getElementById("gemini-api-key-input").value = data.api_key || "";
+  document.getElementById("openai-api-key-input").value = data.openai_api_key || "";
+  const geminiGroup = document.getElementById("gemini-model-group");
+  geminiGroup.innerHTML = "";
+  data.gemini_models.forEach(m => {
+    const item = document.createElement("label");
+    item.className = "radio-item";
+    item.innerHTML = `<input type="radio" name="gemini-model" value="${m}" ${m === data.model ? "checked" : ""}> ${m}`;
+    geminiGroup.appendChild(item);
+  });
+  const openaiGroup = document.getElementById("openai-model-group");
+  openaiGroup.innerHTML = "";
+  data.openai_models.forEach(m => {
+    const item = document.createElement("label");
+    item.className = "radio-item";
+    item.innerHTML = `<input type="radio" name="openai-model" value="${m}" ${m === data.openai_model ? "checked" : ""}> ${m}`;
+    openaiGroup.appendChild(item);
+  });
+  switchProvider(data.provider || "gemini");
+}
+
+function openSettings() { loadSettingsUI(); document.getElementById("settings-modal").classList.add("open"); }
+
+async function saveSettings() {
+  const geminiKey = document.getElementById("gemini-api-key-input").value.trim();
+  const openaiKey = document.getElementById("openai-api-key-input").value.trim();
+  const geminiModel = document.querySelector('input[name="gemini-model"]:checked')?.value || "gemini-2.5-flash";
+  const openaiModel = document.querySelector('input[name="openai-model"]:checked')?.value || "gpt-4o-mini";
+  await fetch("/api/save_settings", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: geminiKey, openai_api_key: openaiKey,
+      model: geminiModel, openai_model: openaiModel, provider: currentProvider })
+  });
+  closeModal("settings-modal");
+  setStatus("設定を保存しました");
+}
+
+function copyPrompt() {
+  if (!generatedPrompt) return;
+  navigator.clipboard.writeText(generatedPrompt);
+  setStatus("コピーしました");
+}
+function copyAnswer() {
+  const text = document.getElementById("answer-box").textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  setStatus("コピーしました");
+}
+
+async function saveFavorite() {
+  if (!generatedPrompt) { setStatus("先にプロンプトを生成してください"); return; }
+  const title = prompt("タイトルを入力してください（省略可）:", "");
+  if (title === null) return;
+  await fetch("/api/save_favorite", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category: currentCategory, lang, prompt: generatedPrompt, title })
+  });
+  setStatus("お気に入りに保存しました");
+}
+
+async function openHistory() {
+  const res = await fetch("/api/history");
+  const data = await res.json();
+  const body = document.getElementById("history-body");
+  body.innerHTML = "";
+  if (!data.history.length) {
+    body.innerHTML = '<p style="text-align:center;color:#888;padding:30px;">履歴がありません</p>';
+  } else {
+    data.history.forEach(entry => {
+      const card = document.createElement("div");
+      card.className = "history-card";
+      const preview = entry.prompt.slice(0, 100).replace(/[\r\n]+/g, " ") + "...";
+      const encoded = encodeURIComponent(entry.prompt);
+      const ui = UI[lang];
+      card.innerHTML = '<div class="history-meta"><span>[' + entry.category.toUpperCase() + '] ' + entry.timestamp + '</span><div class="history-meta-btns"><button class="btn-use" onclick="usePrompt(\'' + encoded + '\')">' + ui.historyUse + '</button><button class="btn-delete" onclick="deleteHistoryEntry(\'' + entry.id + '\')">' + ui.historyDelete + '</button></div></div><div class="history-preview">' + preview + '</div>';
+      body.appendChild(card);
+    });
+  }
+  document.getElementById("history-modal").classList.add("open");
+}
+
+async function deleteHistoryEntry(id) {
+  await fetch(`/api/delete_history/${id}`, { method: "DELETE" });
+  openHistory();
+}
+async function clearAllHistory() {
+  if (!confirm("履歴を全て削除しますか？")) return;
+  await fetch("/api/clear_history", { method: "DELETE" });
+  openHistory();
+}
+
+async function openFavorites() {
+  const res = await fetch("/api/favorites");
+  const data = await res.json();
+  const body = document.getElementById("favorites-body");
+  body.innerHTML = "";
+  if (!data.favorites.length) {
+    body.innerHTML = '<p style="text-align:center;color:#888;padding:30px;">お気に入りがありません</p>';
+  } else {
+    data.favorites.forEach(fav => {
+      const card = document.createElement("div");
+      card.className = "history-card";
+      const encoded = encodeURIComponent(fav.prompt);
+      const ui2 = UI[lang];
+      card.innerHTML = '<div class="history-meta"><span>[' + fav.category.toUpperCase() + '] ' + fav.timestamp + '</span><div class="history-meta-btns"><button class="btn-use" onclick="usePrompt(\'' + encoded + '\')">' + ui2.favUse + '</button><button class="btn-delete" onclick="deleteFavoriteEntry(\'' + fav.id + '\')">' + ui2.favDelete + '</button></div></div><div class="history-preview"><strong>' + (fav.title || "") + '</strong></div>';
+      body.appendChild(card);
+    });
+  }
+  document.getElementById("favorites-modal").classList.add("open");
+}
+
+async function deleteFavoriteEntry(id) {
+  await fetch(`/api/delete_favorite/${id}`, { method: "DELETE" });
+  openFavorites();
+}
+
+function usePrompt(encoded) {
+  generatedPrompt = decodeURIComponent(encoded);
+  document.getElementById("prompt-box").textContent = generatedPrompt;
+  closeModal("history-modal");
+  closeModal("favorites-modal");
+  setStatus("プロンプトを読み込みました");
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+function clearOutputs() {
+  document.getElementById("prompt-box").textContent = "";
+  document.getElementById("answer-box").textContent = "";
+  generatedPrompt = "";
+  setStatus("");
+}
+function setStatus(html, isHtml = false) {
+  const bar = document.getElementById("status-bar");
+  if (isHtml) bar.innerHTML = html;
+  else bar.textContent = html;
+}
+</script>
+</body>
+</html>
