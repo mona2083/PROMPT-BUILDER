@@ -54,6 +54,7 @@ def api_build_prompt():
         context_history=data.get("context_history", ""),
         instructions=data.get("instructions", ""),
         include_profile=data.get("include_profile", True),
+        role_perspectives=data.get("role_perspectives", ""),
     )
     return jsonify({"prompt": prompt})
 

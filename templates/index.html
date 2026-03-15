@@ -34,6 +34,7 @@
 
   .card { background: #fff; border-radius: 10px; padding: 16px;
           display: flex; flex-direction: column; overflow: hidden; }
+  .card.left-panel { overflow-y: auto; }
 
   .profile-badge { display: flex; align-items: center; gap: 8px;
     background: #e8f0f8; border-radius: 6px; padding: 6px 10px;
@@ -59,15 +60,15 @@
 
   .form-title { font-size: 14px; font-weight: 700; color: #333;
                 margin-bottom: 4px; flex-shrink: 0; }
-  .form-scroll { overflow-y: auto; flex: 1; padding-right: 4px; }
+  .form-scroll { padding-right: 4px; }
 
   /* コンボボックス */
   .field-group { margin-bottom: 12px; }
   .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px;
-  display: flex; align-items: center; gap: 6px; }
+    display: flex; align-items: center; gap: 6px; }
   .required-badge { font-size: 10px; font-weight: 700; color: #e03030;
-  background: #fff0f0; border: 1px solid #f0c0c0; border-radius: 3px;
-  padding: 1px 5px; flex-shrink: 0; }
+    background: #fff0f0; border: 1px solid #f0c0c0; border-radius: 3px;
+    padding: 1px 5px; flex-shrink: 0; }
   .combo-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
   .combo-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
     padding: 5px 8px; font-size: 12px; background: #f9f9f9;
@@ -335,6 +336,30 @@
   .optimized-badge { background: #e07820; color: #fff; border-radius: 10px;
     padding: 1px 6px; font-size: 10px; font-weight: 700; }
 
+  /* 役割の視点 */
+  .role-perspective-section { border: 1px solid #e8dff5; border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden; flex-shrink: 0; }
+  .role-perspective-header { display: flex; justify-content: space-between;
+    align-items: center; padding: 8px 12px; background: #f3eeff;
+    cursor: pointer; user-select: none; }
+  .role-perspective-left { display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: #6a3fa0; }
+  .role-perspective-badge { background: #7c52c8; color: #fff; border-radius: 10px;
+    padding: 1px 7px; font-size: 10px; display: none; }
+  .role-perspective-icon { font-size: 11px; color: #888; }
+  .role-perspective-body { display: none; padding: 10px 12px; background: #fbf8ff; }
+  .role-perspective-body.open { display: block; }
+  .role-perspective-hint { font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.5; }
+  .role-perspective-item { display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 4px; border-radius: 4px; cursor: pointer; }
+  .role-perspective-item:hover { background: #ede5ff; }
+  .role-perspective-item input[type="checkbox"] { margin-top: 2px;
+    accent-color: #7c52c8; flex-shrink: 0; cursor: pointer; }
+  .role-perspective-item label { font-size: 12px; color: #333;
+    line-height: 1.4; cursor: pointer; flex: 1; }
+  .role-perspective-item .perspective-desc { font-size: 10px; color: #888;
+    display: block; margin-top: 2px; }
+
   .loading { display: inline-block; width: 14px; height: 14px;
     border: 2px solid #ccc; border-top-color: #4a90d9; border-radius: 50%;
     animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
@@ -357,7 +382,7 @@
 <div class="tabs" id="tab-bar"></div>
 
 <div class="main">
-  <div class="card">
+  <div class="card left-panel">
     <div class="profile-badge" id="profile-badge" style="display:none;">
       <span id="profile-badge-text"></span>
       <button class="profile-badge-edit" id="profile-edit-btn" onclick="openProfile()">編集</button>
@@ -424,6 +449,21 @@
         <div class="context-footer">
           <button class="context-clear-btn" id="context-clear-btn" onclick="clearContext()">クリア</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 役割の視点 -->
+    <div class="role-perspective-section">
+      <div class="role-perspective-header" onclick="toggleRolePerspective()">
+        <div class="role-perspective-left">
+          <span id="role-perspective-title">役割の視点を追加</span>
+          <span class="role-perspective-badge" id="role-perspective-badge">設定済み</span>
+        </div>
+        <span class="role-perspective-icon" id="role-perspective-icon">▶ 展開</span>
+      </div>
+      <div class="role-perspective-body" id="role-perspective-body">
+        <p class="role-perspective-hint" id="role-perspective-hint">選択した視点でAIの役割を定義します。複数選択で多面的なアウトプットが得られます。</p>
+        <div id="role-perspective-checks"></div>
       </div>
     </div>
 
@@ -663,6 +703,11 @@ const UI = {
     historyDelete: "削除",
     favUse: "プロンプトを使う",
     favDelete: "削除",
+    rolePerspectiveTitle: "役割の視点を追加",
+    rolePerspectiveBadge: "設定済み",
+    rolePerspectiveExpand: "▶ 展開",
+    rolePerspectiveCollapse: "▼ 折りたたむ",
+    rolePerspectiveHint: "選択した視点でAIの役割を定義します。複数選択で多面的なアウトプットが得られます。",
     instApply: "✔ 適用",
     instPending: "● 未適用の変更あり",
     instHint: "チェックした項目を「適用」ボタンで確定してください。",
@@ -725,6 +770,11 @@ const UI = {
     historyDelete: "Delete",
     favUse: "Use Prompt",
     favDelete: "Delete",
+    rolePerspectiveTitle: "Add Role Perspective",
+    rolePerspectiveBadge: "Active",
+    rolePerspectiveExpand: "▶ Expand",
+    rolePerspectiveCollapse: "▼ Collapse",
+    rolePerspectiveHint: "Define the AI's role from selected perspectives. Multiple selections give multi-faceted output.",
     instApply: "✔ Apply",
     instPending: "● Unapplied changes",
     instHint: "Check items then click Apply to confirm.",
@@ -763,6 +813,7 @@ window.onload = async () => {
   await loadProfileData();
   await loadInstructionPresets();
   await restoreInstructionsState();
+  renderRolePerspectives();
   buildTabs();
   await loadCategory(currentCategory);
   await refreshPresets();
@@ -1067,6 +1118,82 @@ async function deleteComboOption(fieldKey, sel) {
   });
   selectedOpt.remove();
   setStatus("削除しました");
+}
+
+
+// ────────────────────────────────────────────
+// 役割の視点
+// ────────────────────────────────────────────
+const ROLE_PERSPECTIVES = {
+  ja: [
+    { key: "expert",    label: "専門家・実務家",   desc: "スキル・経験・スタンスを持つ専門家として回答" },
+    { key: "critic",    label: "批判的レビュアー",  desc: "問題点・リスク・改善点を指摘する立場で回答" },
+    { key: "user",      label: "ユーザー・顧客視点", desc: "実際に使う人・買う人の目線で回答" },
+    { key: "technical", label: "技術専門家",        desc: "技術的な正確さと実装可能性を重視して回答" },
+    { key: "business",  label: "ビジネス・コスト視点", desc: "費用対効果・ROI・実現性を重視して回答" },
+    { key: "teacher",   label: "教師・メンター",    desc: "わかりやすく段階的に教える立場で回答" },
+  ],
+  en: [
+    { key: "expert",    label: "Expert Practitioner",  desc: "Respond as a skilled expert with experience and clear stance" },
+    { key: "critic",    label: "Critical Reviewer",     desc: "Point out issues, risks, and areas for improvement" },
+    { key: "user",      label: "User / Customer View",  desc: "Respond from the perspective of the end user" },
+    { key: "technical", label: "Technical Specialist",  desc: "Focus on technical accuracy and implementability" },
+    { key: "business",  label: "Business / Cost View",  desc: "Emphasize ROI, cost-effectiveness, and feasibility" },
+    { key: "teacher",   label: "Teacher / Mentor",      desc: "Explain clearly and step-by-step in an educational tone" },
+  ]
+};
+
+let selectedPerspectives = [];
+
+function renderRolePerspectives() {
+  const container = document.getElementById("role-perspective-checks");
+  container.innerHTML = "";
+  const perspectives = ROLE_PERSPECTIVES[lang] || ROLE_PERSPECTIVES.ja;
+  perspectives.forEach(({ key, label, desc }) => {
+    const item = document.createElement("div");
+    item.className = "role-perspective-item";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "rp-" + key;
+    cb.checked = selectedPerspectives.includes(key);
+    cb.onchange = () => {
+      if (cb.checked) {
+        if (!selectedPerspectives.includes(key)) selectedPerspectives.push(key);
+      } else {
+        selectedPerspectives = selectedPerspectives.filter(k => k !== key);
+      }
+      updateRolePerspectiveBadge();
+    };
+    const lbl = document.createElement("label");
+    lbl.htmlFor = "rp-" + key;
+    lbl.innerHTML = label + '<span class="perspective-desc">' + desc + '</span>';
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    container.appendChild(item);
+  });
+}
+
+function updateRolePerspectiveBadge() {
+  document.getElementById("role-perspective-badge").style.display =
+    selectedPerspectives.length > 0 ? "inline" : "none";
+}
+
+function toggleRolePerspective() {
+  const ui = UI[lang];
+  const body = document.getElementById("role-perspective-body");
+  const icon = document.getElementById("role-perspective-icon");
+  body.classList.toggle("open");
+  icon.textContent = body.classList.contains("open")
+    ? ui.rolePerspectiveCollapse : ui.rolePerspectiveExpand;
+}
+
+function getRolePerspectives() {
+  if (selectedPerspectives.length === 0) return "";
+  const perspectives = ROLE_PERSPECTIVES[lang] || ROLE_PERSPECTIVES.ja;
+  return selectedPerspectives.map(key => {
+    const p = perspectives.find(p => p.key === key);
+    return p ? p.label : key;
+  }).join("、");
 }
 
 // ────────────────────────────────────────────
@@ -1710,7 +1837,8 @@ async function onSend() {
       profile: currentProfile, simple_mode: false,
       context_history: getContextHistory(),
       instructions: getInstructions(),
-      include_profile: getIncludeProfile()
+      include_profile: getIncludeProfile(),
+      role_perspectives: getRolePerspectives()
     })
   });
   const data = await res.json();
@@ -1815,6 +1943,10 @@ function updateStaticLabels() {
   set("instructions-hint", ui.instHint || ui.instructionsHint);
   set("inst-add-btn", ui.instAddBtn);
   set("instructions-apply-btn", ui.instApply);
+  set("role-perspective-title", ui.rolePerspectiveTitle);
+  set("role-perspective-badge", ui.rolePerspectiveBadge);
+  set("role-perspective-hint", ui.rolePerspectiveHint);
+  renderRolePerspectives();
   set("instructions-pending", ui.instPending);
   set("include-profile-label", ui.includeProfileLabel);
   set("optimize-prompt-label", ui.optimizePromptLabel);
@@ -2062,9 +2194,18 @@ function usePrompt(encoded) {
 
 function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 function clearOutputs() {
+  // カテゴリ切り替えなどでは消さない（次の生成まで残す）
+  setStatus("");
+}
+
+function clearOutputsForce() {
+  // 明示的にクリアが必要な場合のみ使用
   document.getElementById("prompt-box").textContent = "";
   document.getElementById("answer-box").textContent = "";
   generatedPrompt = "";
+  templatePrompt = "";
+  optimizedPrompt = "";
+  document.getElementById("optimized-badge").style.display = "none";
   setStatus("");
 }
 function setStatus(html, isHtml = false) {
