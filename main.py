@@ -62,7 +62,15 @@ def api_build_prompt():
 def api_ask_ai():
     data = request.json
     try:
-        answer = ask_ai(data["prompt"])
+        # クライアントから送られたAPIキーを使用（なければサーバーのsettings.jsonにフォールバック）
+        client_settings = {
+            "api_key":        data.get("api_key", ""),
+            "openai_api_key": data.get("openai_api_key", ""),
+            "model":          data.get("model", ""),
+            "openai_model":   data.get("openai_model", ""),
+            "provider":       data.get("provider", ""),
+        }
+        answer = ask_ai(data["prompt"], client_settings=client_settings)
         return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)})
@@ -263,8 +271,12 @@ def api_delete_instruction_preset():
 # エントリーポイント
 # ────────────────────────────────────────────
 if __name__ == "__main__":
-    url = "http://127.0.0.1:5001"
-    print(f"\n AI Prompt Builder 起動中...")
-    print(f"   ブラウザで開く: {url}\n")
-    threading.Timer(1.0, lambda: webbrowser.open(url)).start()
-    app.run(debug=False, port=5001)
+    import os
+    port = int(os.environ.get("PORT", 5001))
+    is_local = port == 5001
+    if is_local:
+        url = f"http://127.0.0.1:{port}"
+        print(f"\n AI Prompt Builder 起動中...")
+        print(f"   ブラウザで開く: {url}\n")
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+    app.run(debug=False, host="0.0.0.0", port=port)
