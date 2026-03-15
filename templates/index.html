@@ -226,6 +226,13 @@
   .instructions-textarea:focus { border-color: #5a9e35; }
   .instructions-hint { font-size: 11px; color: #888; margin-top: 5px; }
 
+  /* ユーザー情報トグル */
+  .profile-include-row { display: flex; align-items: center;
+    padding: 4px 0 8px; flex-shrink: 0; }
+  .profile-include-label { display: flex; align-items: center;
+    gap: 7px; font-size: 12px; color: #555; cursor: pointer; }
+  .profile-include-label input[type="checkbox"] { accent-color: #4a90d9; cursor: pointer; }
+
   /* 会話履歴・背景コンテキスト */
   .context-section { border: 1px solid #dde8f4; border-radius: 8px;
     margin-bottom: 10px; overflow: hidden; flex-shrink: 0; }
@@ -268,6 +275,62 @@
     padding: 6px 8px; font-size: 12px; outline: none; font-family: inherit; }
   .instructions-custom-input:focus { border-color: #5a9e35; }
 
+  /* セットアップモーダル */
+  .setup-overlay { display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 200;
+    align-items: center; justify-content: center; }
+  .setup-overlay.open { display: flex; }
+  .setup-modal { background: #fff; border-radius: 16px;
+    width: 520px; max-width: 95vw; padding: 0;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .setup-hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 32px 32px 24px; text-align: center; }
+  .setup-hero h1 { color: #fff; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .setup-hero p { color: #a0aec0; font-size: 14px; }
+  .setup-body { padding: 28px 32px 32px; }
+  .setup-step { font-size: 12px; font-weight: 700; color: #4a90d9;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+  .setup-provider-choice { display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 24px; }
+  .setup-provider-card { border: 2px solid #e0e0e0; border-radius: 10px;
+    padding: 16px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .setup-provider-card:hover { border-color: #4a90d9; background: #f0f7ff; }
+  .setup-provider-card.selected { border-color: #4a90d9; background: #e8f0f8; }
+  .setup-provider-logo { font-size: 28px; margin-bottom: 8px; }
+  .setup-provider-name { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 4px; }
+  .setup-provider-desc { font-size: 11px; color: #888; line-height: 1.4; }
+  .setup-key-section { margin-bottom: 20px; }
+  .setup-key-label { font-size: 13px; font-weight: 600; color: #333;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .setup-key-link { font-size: 11px; color: #4a90d9; text-decoration: none;
+    font-weight: 400; }
+  .setup-key-link:hover { text-decoration: underline; }
+  .setup-key-input { width: 100%; border: 2px solid #e0e0e0; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; outline: none; font-family: inherit;
+    transition: border-color 0.15s; }
+  .setup-key-input:focus { border-color: #4a90d9; }
+  .setup-key-hint { font-size: 11px; color: #888; margin-top: 6px; }
+  .setup-save-btn { width: 100%; background: #4a90d9; color: #fff;
+    border: none; border-radius: 10px; padding: 14px;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .setup-save-btn:hover { background: #357abd; }
+  .setup-save-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .setup-skip { text-align: center; margin-top: 12px; }
+  .setup-skip a { font-size: 12px; color: #aaa; cursor: pointer; text-decoration: none; }
+  .setup-skip a:hover { color: #666; }
+  .setup-error { color: #cc4444; font-size: 12px; margin-top: 8px;
+    display: none; padding: 8px; background: #ffeeee; border-radius: 6px; }
+
+  /* プロンプトタブ */
+  .prompt-tabs-bar { display: flex; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
+  .prompt-tab { border: 1px solid #ddd; border-radius: 6px; padding: 6px 14px;
+    cursor: pointer; font-size: 12px; font-weight: 500;
+    background: #f5f5f5; color: #555; display: flex; align-items: center; gap: 6px; }
+  .prompt-tab.active { background: #4a90d9; color: #fff; border-color: #4a90d9; }
+  .prompt-tab:hover:not(.active) { background: #e8e8e8; }
+  .optimized-badge { background: #e07820; color: #fff; border-radius: 10px;
+    padding: 1px 6px; font-size: 10px; font-weight: 700; }
+
   .loading { display: inline-block; width: 14px; height: 14px;
     border: 2px solid #ccc; border-top-color: #4a90d9; border-radius: 50%;
     animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
@@ -296,6 +359,15 @@
       <button class="profile-badge-edit" id="profile-edit-btn" onclick="openProfile()">編集</button>
     </div>
     <div class="form-title" id="form-title">AI-PM</div>
+
+    <!-- ユーザー情報トグル -->
+    <div class="profile-include-row">
+      <label class="profile-include-label">
+        <input type="checkbox" id="include-profile" checked onchange="onIncludeProfileChange()">
+        <span id="include-profile-label">ユーザー情報をプロンプトに含める</span>
+      </label>
+    </div>
+
     <div class="preset-bar">
       <select class="preset-select" id="preset-select" onchange="onPresetSelect()">
         <option value="">-- プリセットを選択 --</option>
@@ -357,13 +429,23 @@
       <label for="send-to-api" id="send-option-label">AIに送信して回答を取得する</label>
     </div>
     <div class="option-row">
-      <input type="checkbox" id="simple-mode" checked>
-      <label for="simple-mode" id="simple-mode-label">追加質問モード（質問のみ送信）</label>
+      <input type="checkbox" id="optimize-prompt">
+      <label for="optimize-prompt" id="optimize-prompt-label">生成したプロンプトをAIで最適化する</label>
     </div>
     <button class="send-btn" id="send-btn" onclick="onSend()">プロンプトを生成</button>
   </div>
 
   <div class="card right-panel">
+    <!-- プロンプトタブ -->
+    <div class="prompt-tabs-bar">
+      <button class="prompt-tab active" id="tab-template" onclick="switchPromptTab('template')">
+        <span id="tab-template-label">定型プロンプト</span>
+      </button>
+      <button class="prompt-tab" id="tab-optimized" onclick="switchPromptTab('optimized')">
+        <span id="tab-optimized-label">AI最適化済み</span>
+        <span class="optimized-badge" id="optimized-badge" style="display:none;">NEW</span>
+      </button>
+    </div>
     <div class="prompt-section">
       <div class="output-header">
         <span class="output-label" id="prompt-label">▼ 生成されたプロンプト</span>
@@ -463,6 +545,57 @@
   </div>
 </div>
 
+<!-- セットアップモーダル（初回起動時） -->
+<div class="setup-overlay" id="setup-modal">
+  <div class="setup-modal">
+    <div class="setup-hero">
+      <h1>🤖 AI Prompt Builder</h1>
+      <p id="setup-subtitle">まず、使用するAIサービスを選んでください</p>
+    </div>
+    <div class="setup-body">
+      <div class="setup-step" id="setup-step-label">Step 1 — AIサービスを選択</div>
+
+      <!-- Provider Choice -->
+      <div class="setup-provider-choice">
+        <div class="setup-provider-card selected" id="setup-card-gemini"
+             onclick="selectSetupProvider('gemini')">
+          <div class="setup-provider-logo">✨</div>
+          <div class="setup-provider-name">Google Gemini</div>
+          <div class="setup-provider-desc" id="setup-desc-gemini">無料枠あり<br>日本語対応◎</div>
+        </div>
+        <div class="setup-provider-card" id="setup-card-openai"
+             onclick="selectSetupProvider('openai')">
+          <div class="setup-provider-logo">⚡</div>
+          <div class="setup-provider-name">OpenAI ChatGPT</div>
+          <div class="setup-provider-desc" id="setup-desc-openai">GPT-4o対応<br>高精度</div>
+        </div>
+      </div>
+
+      <!-- API Key Input -->
+      <div class="setup-key-section">
+        <div class="setup-key-label">
+          <span id="setup-key-label-text">Gemini APIキー</span>
+          <a id="setup-key-link" href="https://aistudio.google.com/app/apikey"
+             target="_blank" class="setup-key-link">🔑 APIキーを取得 →</a>
+        </div>
+        <input type="password" class="setup-key-input" id="setup-key-input"
+               placeholder="APIキーを貼り付けてください...">
+        <div class="setup-key-hint" id="setup-key-hint">
+          Google AI Studio でAPIキーを無料で取得できます。
+        </div>
+        <div class="setup-error" id="setup-error"></div>
+      </div>
+
+      <button class="setup-save-btn" id="setup-save-btn" onclick="saveSetup()">
+        はじめる →
+      </button>
+      <div class="setup-skip">
+        <a onclick="skipSetup()">後で設定する（設定ボタンから変更できます）</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 let lang = "ja";
 let currentCategory = "ai_pm";
@@ -526,6 +659,13 @@ const UI = {
     historyDelete: "削除",
     favUse: "プロンプトを使う",
     favDelete: "削除",
+    instApply: "✔ 適用",
+    instPending: "● 未適用の変更あり",
+    instHint: "チェックした項目を「適用」ボタンで確定してください。",
+    includeProfileLabel: "ユーザー情報をプロンプトに含める",
+    optimizePromptLabel: "生成したプロンプトをAIで最適化する",
+    tabTemplate: "定型プロンプト",
+    tabOptimized: "AI最適化済み",
   },
   en: {
     title: "AI Prompt Builder", send: "Send", promptOnly: "Generate Prompt",
@@ -581,6 +721,13 @@ const UI = {
     historyDelete: "Delete",
     favUse: "Use Prompt",
     favDelete: "Delete",
+    instApply: "✔ Apply",
+    instPending: "● Unapplied changes",
+    instHint: "Check items then click Apply to confirm.",
+    includeProfileLabel: "Include user profile in prompt",
+    optimizePromptLabel: "Optimize prompt with AI",
+    tabTemplate: "Template Prompt",
+    tabOptimized: "AI Optimized",
   }
 };
 
@@ -611,12 +758,110 @@ const CAT_LABELS = {
 window.onload = async () => {
   await loadProfileData();
   await loadInstructionPresets();
+  await restoreInstructionsState();
   buildTabs();
   await loadCategory(currentCategory);
   await refreshPresets();
   await loadSettingsUI();
   updateSendBtn();
+  // 初回起動チェック：APIキーが未設定なら setup を表示
+  await checkFirstRun();
 };
+
+// ────────────────────────────────────────────
+// セットアップ（初回起動）
+// ────────────────────────────────────────────
+let setupProvider = "gemini";
+
+async function checkFirstRun() {
+  const res = await fetch("/api/settings");
+  const data = await res.json();
+  const hasKey = (data.api_key && data.api_key.trim()) ||
+                 (data.openai_api_key && data.openai_api_key.trim());
+  if (!hasKey) {
+    document.getElementById("setup-modal").classList.add("open");
+  }
+}
+
+function selectSetupProvider(provider) {
+  setupProvider = provider;
+  document.getElementById("setup-card-gemini").classList.toggle("selected", provider === "gemini");
+  document.getElementById("setup-card-openai").classList.toggle("selected", provider === "openai");
+
+  const isGemini = provider === "gemini";
+  const isJa = lang === "ja";
+
+  document.getElementById("setup-key-label-text").textContent =
+    isGemini ? "Gemini APIキー" : "OpenAI APIキー";
+  document.getElementById("setup-key-input").placeholder =
+    isGemini ? "AIza..." : "sk-...";
+  document.getElementById("setup-key-link").href =
+    isGemini
+      ? "https://aistudio.google.com/app/apikey"
+      : "https://platform.openai.com/api-keys";
+  document.getElementById("setup-key-link").textContent =
+    isJa ? "🔑 APIキーを取得 →" : "🔑 Get API Key →";
+  document.getElementById("setup-key-hint").textContent = isGemini
+    ? (isJa ? "Google AI Studio でAPIキーを無料で取得できます。" : "Get a free API key at Google AI Studio.")
+    : (isJa ? "OpenAI Platform でAPIキーを取得できます。" : "Get your API key at OpenAI Platform.");
+  document.getElementById("setup-error").style.display = "none";
+}
+
+async function saveSetup() {
+  const key = document.getElementById("setup-key-input").value.trim();
+  const errorEl = document.getElementById("setup-error");
+  const isJa = lang === "ja";
+
+  if (!key) {
+    errorEl.textContent = isJa ? "APIキーを入力してください。" : "Please enter your API key.";
+    errorEl.style.display = "block";
+    return;
+  }
+  if (setupProvider === "gemini" && !key.startsWith("AIza")) {
+    errorEl.textContent = isJa
+      ? "Gemini APIキーは「AIza」で始まります。確認してください。"
+      : "Gemini API keys start with 'AIza'. Please check.";
+    errorEl.style.display = "block";
+    return;
+  }
+  if (setupProvider === "openai" && !key.startsWith("sk-")) {
+    errorEl.textContent = isJa
+      ? "OpenAI APIキーは「sk-」で始まります。確認してください。"
+      : "OpenAI API keys start with 'sk-'. Please check.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  const btn = document.getElementById("setup-save-btn");
+  btn.disabled = true;
+  btn.textContent = isJa ? "保存中..." : "Saving...";
+
+  const settings = await (await fetch("/api/settings")).json();
+  const body = {
+    api_key: setupProvider === "gemini" ? key : settings.api_key,
+    openai_api_key: setupProvider === "openai" ? key : settings.openai_api_key,
+    model: settings.model || "gemini-2.5-flash",
+    openai_model: settings.openai_model || "gpt-4o-mini",
+    provider: setupProvider,
+  };
+
+  await fetch("/api/save_settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  await loadSettingsUI();
+  document.getElementById("setup-modal").classList.remove("open");
+  btn.disabled = false;
+  btn.textContent = isJa ? "はじめる →" : "Get Started →";
+  setStatus(isJa ? "✅ APIキーを保存しました。さっそく使ってみましょう！" : "✅ API key saved. Let's get started!");
+}
+
+function skipSetup() {
+  document.getElementById("setup-modal").classList.remove("open");
+  openSettings();
+}
 
 function buildTabs() {
   const bar = document.getElementById("tab-bar");
@@ -817,7 +1062,9 @@ async function deleteComboOption(fieldKey, sel) {
 // AIへの指示・ルール
 // ────────────────────────────────────────────
 let instructionPresets = {};
-let customInstructions = []; // ユーザーが追加したカスタムルール
+let customInstructions = [];
+let activePresetKeys = [];
+let appliedInstructions = ''; // 適用済み指示（送信に使う） // ユーザーが追加したカスタムルール
 
 async function loadInstructionPresets() {
   const ui = UI[lang];
@@ -847,7 +1094,7 @@ function getInstText(inst) {
   return inst || "";
 }
 
-function renderInstructionsChecklist(instructions) {
+function renderInstructionsChecklist(instructions, checkedStates = null) {
   const list = document.getElementById("instructions-checklist");
   list.innerHTML = "";
   instructions.forEach((inst, idx) => {
@@ -855,13 +1102,26 @@ function renderInstructionsChecklist(instructions) {
     if (!text) return;
     const item = document.createElement("div");
     item.className = "instructions-checklist-item";
-    item.dataset.instJa = (inst && typeof inst === "object") ? (inst["ja"] || text) : text;
-    item.dataset.instEn = (inst && typeof inst === "object") ? (inst["en"] || text) : text;
+    const jaText = (inst && typeof inst === "object") ? (inst["ja"] || text) : text;
+    const enText = (inst && typeof inst === "object") ? (inst["en"] || text) : text;
+    item.dataset.instJa = jaText;
+    item.dataset.instEn = enText;
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.id = "inst-" + idx;
-    cb.checked = true;
-    cb.addEventListener("change", updateInstructionsBadge);
+    // checkedStates が null → 全チェック
+    // 配列 → インデックスで参照
+    // オブジェクト → instEn をキーで参照
+    let checked = true;
+    if (checkedStates !== null) {
+      if (Array.isArray(checkedStates)) {
+        checked = checkedStates[idx] !== false;
+      } else if (typeof checkedStates === "object") {
+        checked = checkedStates[enText] !== false;
+      }
+    }
+    cb.checked = checked;
+    cb.addEventListener("change", () => { updateInstructionsBadge(); saveInstructionsState(); });
     const lbl = document.createElement("label");
     lbl.htmlFor = "inst-" + idx;
     lbl.textContent = text;
@@ -880,7 +1140,7 @@ function renderInstructionsChecklist(instructions) {
     cb.type = "checkbox";
     cb.id = "inst-custom-" + idx;
     cb.checked = true;
-    cb.addEventListener("change", updateInstructionsBadge);
+    cb.addEventListener("change", () => { updateInstructionsBadge(); saveInstructionsState(); });
     const lbl = document.createElement("label");
     lbl.htmlFor = "inst-custom-" + idx;
     lbl.textContent = text;
@@ -926,8 +1186,69 @@ function updateInstructionsBadge() {
 }
 
 function onInstructionPresetSelect() {
-  const instructions = getCurrentPresetInstructions();
-  renderInstructionsChecklist(instructions);
+  const sel = document.getElementById("instructions-select");
+  const key = sel.value;
+  if (!key) return;
+
+  // 既に選択済みなら何もしない（重複追加防止）
+  if (!activePresetKeys.includes(key)) {
+    activePresetKeys.push(key);
+  }
+
+  // チェック状態を保持しながら再レンダリング
+  const combined = buildCombinedInstructions(activePresetKeys);
+  const currentStates = getCurrentCheckedStates();
+  renderInstructionsChecklist(combined, currentStates);
+  updateActivePresetUI();
+  saveInstructionsState();
+
+  // セレクトをリセット（同じプリセットを再選択できるように）
+  sel.value = "";
+}
+
+function getCurrentCheckedStates() {
+  // 現在表示中のチェック状態を保存（instEnをキーにして管理）
+  const states = {};
+  document.querySelectorAll("#instructions-checklist .instructions-checklist-item").forEach(item => {
+    const cb = item.querySelector("input[type=checkbox]");
+    const key = item.dataset.instEn || item.dataset.instJa || "";
+    if (key) states[key] = cb ? cb.checked : true;
+  });
+  return states;
+}
+
+function updateActivePresetUI() {
+  // 選択中のプリセットキーをセレクトの下に表示
+  const existing = document.getElementById("active-presets-bar");
+  if (existing) existing.remove();
+
+  if (activePresetKeys.length === 0) return;
+
+  const bar = document.createElement("div");
+  bar.id = "active-presets-bar";
+  bar.style.cssText = "display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;";
+
+  activePresetKeys.forEach(key => {
+    if (!instructionPresets[key]) return;
+    const nameObj = instructionPresets[key].name;
+    const name = (nameObj && typeof nameObj === "object")
+      ? (nameObj[lang] || nameObj["ja"]) : nameObj;
+    const tag = document.createElement("span");
+    tag.style.cssText = "background:#e8f5e2;color:#4a7c2f;border:1px solid #c3e6ab;" +
+      "border-radius:12px;padding:2px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;";
+    tag.innerHTML = name + ' <span style="color:#cc4444;font-weight:700;">✕</span>';
+    tag.onclick = () => {
+      activePresetKeys = activePresetKeys.filter(k => k !== key);
+      const combined = buildCombinedInstructions(activePresetKeys);
+      renderInstructionsChecklist(combined, null);
+      updateActivePresetUI();
+      saveInstructionsState();
+    };
+    bar.appendChild(tag);
+  });
+
+  const checklist = document.getElementById("instructions-checklist");
+  checklist.parentNode.insertBefore(bar, checklist);
 }
 
 function addCustomInstruction() {
@@ -947,14 +1268,86 @@ function toggleInstructions() {
   icon.textContent = body.classList.contains("open") ? ui.instructionsCollapse : ui.instructionsExpand;
 }
 
+function saveInstructionsState() {
+  const items = document.querySelectorAll("#instructions-checklist .instructions-checklist-item");
+  const checkedStates = {};
+  items.forEach(item => {
+    const cb = item.querySelector("input[type=checkbox]");
+    const key = item.dataset.instEn || item.dataset.instJa || "";
+    if (key) checkedStates[key] = cb ? cb.checked : true;
+  });
+  const state = {
+    multiPresetKeys: activePresetKeys || [],
+    checkedStates: checkedStates,
+    customInstructions: customInstructions,
+  };
+  try { localStorage.setItem("instructions_state", JSON.stringify(state)); } catch(e) {}
+  updateInstructionsBadge();
+}
+
+function loadInstructionsState() {
+  try {
+    const raw = localStorage.getItem("instructions_state");
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+async function restoreInstructionsState() {
+  const state = loadInstructionsState();
+  const sel = document.getElementById("instructions-select");
+
+  if (state && state.multiPresetKeys && state.multiPresetKeys.length > 0) {
+    // 前回の状態を復元（複数プリセット対応）
+    customInstructions = state.customInstructions || [];
+    const combined = buildCombinedInstructions(state.multiPresetKeys);
+    // checkedStates はキーベース（instEn）のオブジェクト
+    renderInstructionsChecklist(combined, state.checkedStates || null);
+    // セレクトは最後に選んだものを表示
+    sel.value = state.multiPresetKeys[state.multiPresetKeys.length - 1] || "";
+    activePresetKeys = [...state.multiPresetKeys];
+    updateActivePresetUI();
+  } else {
+    // デフォルト：基本ルール＋精度・信頼性重視を自動適用（全チェック）
+    const defaultKeys = ["general", "accuracy"];
+    customInstructions = [];
+    const combined = buildCombinedInstructions(defaultKeys);
+    renderInstructionsChecklist(combined, null);
+    sel.value = "general";
+    activePresetKeys = [...defaultKeys];
+    updateActivePresetUI();
+    saveInstructionsState();
+  }
+}
+
+// 複数プリセットのinstructionsを結合（重複除去）
+function buildCombinedInstructions(keys) {
+  const seen = new Set();
+  const result = [];
+  keys.forEach(key => {
+    if (instructionPresets[key]) {
+      instructionPresets[key].instructions.forEach(inst => {
+        const text = getInstText(inst);
+        if (text && !seen.has(text)) {
+          seen.add(text);
+          result.push(inst);
+        }
+      });
+    }
+  });
+  return result;
+}
+
 function getInstructions() {
+  // チェック済み項目を lang に応じて返す
   const items = document.querySelectorAll("#instructions-checklist .instructions-checklist-item");
   const lines = [];
   items.forEach(item => {
     const cb = item.querySelector("input[type=checkbox]");
     if (cb && cb.checked) {
-      // Always send English version to AI for better instruction following
-      const text = item.dataset.instEn || item.querySelector("label")?.textContent.trim() || "";
+      const text = lang === "ja"
+        ? (item.dataset.instJa || item.querySelector("label")?.textContent.trim() || "")
+        : (item.dataset.instEn || item.querySelector("label")?.textContent.trim() || "");
       if (text) lines.push(text);
     }
   });
@@ -1029,6 +1422,17 @@ function getContextHistory() {
   return document.getElementById("context-history").value.trim();
 }
 
+function onIncludeProfileChange() {
+  const checked = document.getElementById("include-profile").checked;
+  const badge = document.getElementById("profile-badge");
+  if (badge) badge.style.opacity = checked ? "1" : "0.4";
+}
+
+function getIncludeProfile() {
+  const el = document.getElementById("include-profile");
+  return el ? el.checked : true;
+}
+
 function updateSendBtn() {
   const sendToApi = document.getElementById("send-to-api").checked;
   document.getElementById("send-btn").textContent =
@@ -1036,6 +1440,7 @@ function updateSendBtn() {
 }
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("send-to-api").addEventListener("change", updateSendBtn);
+  // optimize と send-to-api は独立して動作
 });
 
 async function loadProfileData() {
@@ -1287,19 +1692,23 @@ async function onSend() {
   });
   if (!valid) { setStatus(ui.errorEmpty); return; }
 
-  const simpleMode = document.getElementById("simple-mode").checked;
   const res = await fetch("/api/build_prompt", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       category: currentCategory, lang, user_inputs: userInputs,
-      profile: currentProfile, simple_mode: simpleMode,
+      profile: currentProfile, simple_mode: false,
       context_history: getContextHistory(),
-      instructions: getInstructions()
+      instructions: getInstructions(),
+      include_profile: getIncludeProfile()
     })
   });
   const data = await res.json();
-  generatedPrompt = data.prompt;
-  document.getElementById("prompt-box").textContent = generatedPrompt;
+  templatePrompt = data.prompt;
+  optimizedPrompt = "";
+  generatedPrompt = templatePrompt;
+  // 定型タブに切り替えて表示
+  switchPromptTab("template");
+  document.getElementById("optimized-badge").style.display = "none";
 
   await fetch("/api/save_history", {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -1307,15 +1716,51 @@ async function onSend() {
   });
 
   const sendToApi = document.getElementById("send-to-api").checked;
-  if (!sendToApi) { setStatus("プロンプトを生成しました"); return; }
+  const optimizePrompt = document.getElementById("optimize-prompt").checked;
 
-  setStatus('<span class="loading"></span>' + ui.loading, true);
+  // どちらもOFFならプロンプト生成のみ
+  if (!sendToApi && !optimizePrompt) {
+    setStatus(lang === "ja" ? "プロンプトを生成しました" : "Prompt generated");
+    return;
+  }
+
   document.getElementById("send-btn").disabled = true;
 
   try {
+    let finalPrompt = templatePrompt;
+
+    // ── Step1: プロンプト最適化（ONの場合）──
+    if (optimizePrompt) {
+      setStatus('<span class="loading"></span>' + (lang === "ja" ? "プロンプトを最適化中..." : "Optimizing prompt..."), true);
+      const optInstruction = lang === "ja"
+        ? "あなたはプロンプトエンジニアです。以下のプロンプトを改善してください。\n\n【改善ルール】\n- 【役割】セクション: この質問・依頼内容に最適な具体的な専門家像を設定してください（例:「10年以上の実務経験を持つ〇〇の専門家」など）\n- 【質問・依頼内容】セクション: 質問・背景・期待する出力をより明確・具体的・簡潔に書き直してください\n- 【指示・ルール】【ユーザー情報】【出力ルール】セクション: 変更しないこと\n- マークダウン記法（**、*、#など）は使わないこと\n- 前置きや説明は一切不要。書き直したプロンプトのみを返すこと\n- セクションは【】形式で統一すること\n\n【改善するプロンプト】\n"
+        : "You are a prompt engineer. Improve the following prompt.\n\n[Improvement Rules]\n- [Role] section: Set a specific expert persona best suited for this request (e.g., \"A specialist in X with 10+ years of hands-on experience\")\n- [Request] section: Rewrite the question, background, and expected output to be clearer, more specific, and concise\n- [Instructions], [User Profile], [Output Rules] sections: Do NOT modify\n- Do NOT use markdown (**, *, #, etc.)\n- Return ONLY the improved prompt. No preamble or explanation\n- Use consistent [SECTION] headers\n\n[PROMPT TO IMPROVE]\n";
+      const optRes = await fetch("/api/ask_ai", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: optInstruction + templatePrompt })
+      });
+      const optData = await optRes.json();
+      if (!optData.error && optData.answer) {
+        optimizedPrompt = optData.answer;
+        finalPrompt = optimizedPrompt;
+        switchPromptTab("optimized");
+        document.getElementById("optimized-badge").style.display = "inline";
+      }
+      // 最適化のみでAI送信なし
+      if (!sendToApi) {
+        setStatus(lang === "ja" ? "✅ プロンプトを最適化しました" : "✅ Prompt optimized");
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      setStatus('<span class="loading"></span>' + (lang === "ja" ? "最適化完了。AIに送信中..." : "Optimized. Sending to AI..."), true);
+    } else {
+      setStatus('<span class="loading"></span>' + ui.loading, true);
+    }
+
+    // ── Step2: AIに送信（ONの場合）──
     const gRes = await fetch("/api/ask_ai", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: generatedPrompt })
+      body: JSON.stringify({ prompt: finalPrompt })
     });
     const gData = await gRes.json();
     if (gData.error) { setStatus("エラー: " + gData.error); }
@@ -1350,15 +1795,20 @@ function updateStaticLabels() {
   set("answer-label", ui.answerLabel);
   set("copy-answer-btn", ui.copyAnswer);
   set("send-option-label", ui.sendOption);
-  set("simple-mode-label", ui.simpleMode);
 
   // Instructions section
   set("instructions-title", ui.instructionsTitle);
   set("instructions-badge", ui.instructionsBadge);
   set("instructions-save-btn", ui.instructionsSave);
   set("instructions-del-btn", ui.instructionsDel);
-  set("instructions-hint", ui.instructionsHint);
+  set("instructions-hint", ui.instHint || ui.instructionsHint);
   set("inst-add-btn", ui.instAddBtn);
+  set("instructions-apply-btn", ui.instApply);
+  set("instructions-pending", ui.instPending);
+  set("include-profile-label", ui.includeProfileLabel);
+  set("optimize-prompt-label", ui.optimizePromptLabel);
+  set("tab-template-label", ui.tabTemplate);
+  set("tab-optimized-label", ui.tabOptimized);
   setph("instructions-custom-input", lang === "ja" ? "カスタムルールを追加..." : "Add custom rule...");
   const instrSel = document.getElementById("instructions-select");
   if (instrSel && instrSel.options[0]) instrSel.options[0].textContent = ui.instructionsPresetPlaceholder;
@@ -1406,6 +1856,30 @@ function updateStaticLabels() {
   } else {
     renderProfileGroupTabs();
   }
+  // Update setup modal text
+  const isJa = lang === "ja";
+  const setupSubtitle = document.getElementById("setup-subtitle");
+  const setupStepLabel = document.getElementById("setup-step-label");
+  const setupSaveBtn = document.getElementById("setup-save-btn");
+  const setupSkipEl = document.querySelector(".setup-skip a");
+  if (setupSubtitle) setupSubtitle.textContent = isJa
+    ? "まず、使用するAIサービスを選んでください"
+    : "Choose your AI service to get started";
+  if (setupStepLabel) setupStepLabel.textContent = isJa
+    ? "Step 1 — AIサービスを選択"
+    : "Step 1 — Choose AI Service";
+  if (setupSaveBtn && !setupSaveBtn.disabled) setupSaveBtn.textContent = isJa
+    ? "はじめる →" : "Get Started →";
+  if (setupSkipEl) setupSkipEl.textContent = isJa
+    ? "後で設定する（設定ボタンから変更できます）"
+    : "Skip for now (you can set it later in Settings)";
+  const setupDescGemini = document.getElementById("setup-desc-gemini");
+  const setupDescOpenAI = document.getElementById("setup-desc-openai");
+  if (setupDescGemini) setupDescGemini.innerHTML = isJa
+    ? "無料枠あり<br>日本語対応◎" : "Free tier available<br>Great for Japanese";
+  if (setupDescOpenAI) setupDescOpenAI.innerHTML = isJa
+    ? "GPT-4o対応<br>高精度" : "GPT-4o available<br>High accuracy";
+  selectSetupProvider(setupProvider);
 }
 
 function toggleLang() {
@@ -1464,6 +1938,26 @@ async function saveSettings() {
   });
   closeModal("settings-modal");
   setStatus("設定を保存しました");
+}
+
+let templatePrompt = "";
+let optimizedPrompt = "";
+let currentPromptTab = "template";
+
+function switchPromptTab(tab) {
+  currentPromptTab = tab;
+  document.getElementById("tab-template").classList.toggle("active", tab === "template");
+  document.getElementById("tab-optimized").classList.toggle("active", tab === "optimized");
+
+  if (tab === "template") {
+    document.getElementById("prompt-box").textContent = templatePrompt;
+    generatedPrompt = templatePrompt;
+  } else {
+    document.getElementById("prompt-box").textContent = optimizedPrompt || (
+      lang === "ja" ? "（まだ最適化されていません）" : "(Not yet optimized)"
+    );
+    if (optimizedPrompt) generatedPrompt = optimizedPrompt;
+  }
 }
 
 function copyPrompt() {

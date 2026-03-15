@@ -1002,11 +1002,7 @@ TEMPLATES = {
                     "ステップバイステップ",
                 ]),
             ],
-            "rules": [
-                "質問の意図を正確に把握してから回答してください。",
-                "不明点があれば回答前に確認してください。",
-                "具体的な例を交えて説明してください。",
-            ],
+            "rules": [],
             "output_format": (
                 "ユーザーの指定した形式に従って出力してください。"
                 "形式の指定がない場合は最も読みやすい形式を選んでください。"
@@ -1039,11 +1035,7 @@ TEMPLATES = {
                     "Report format", "FAQ format", "Step-by-step",
                 ]),
             ],
-            "rules": [
-                "Understand the intent before responding.",
-                "Ask for clarification if anything is unclear.",
-                "Use concrete examples in your explanation.",
-            ],
+            "rules": [],
             "output_format": (
                 "Follow the user's specified format. "
                 "If no format is specified, choose the most readable one."
@@ -1065,32 +1057,33 @@ def build_prompt(
     simple_mode: bool = False,
     context_history: str = "",
     instructions: str = "",
+    include_profile: bool = True,
 ) -> str:
     tmpl = TEMPLATES[category_key][lang]
 
-    def _instructions_block(instructions: str, lang: str) -> str:
-        if not instructions or not instructions.strip():
-            return ""
-        label = "【指示・ルール】" if lang == "ja" else "【Instructions】"
-        lines = [f"- {l.strip()}" for l in instructions.strip().splitlines() if l.strip()]
-        return f"\n{label}\n" + "\n".join(lines)
-
     if simple_mode:
         parts = []
+        if instructions and instructions.strip():
+            label = "【指示・ルール】" if lang == "ja" else "【Instructions】"
+            inst_lines = [f"- {l.strip()}" for l in instructions.strip().splitlines() if l.strip()]
+            parts.append(f"{label}\n" + "\n".join(inst_lines) + "\n")
         if context_history and context_history.strip():
             label = "【これまでの会話履歴】" if lang == "ja" else "【Conversation History】"
             parts.append(f"{label}\n{context_history.strip()}\n")
         label_q = "【追加の質問】" if lang == "ja" else "【Follow-up Question】"
         parts.append(f"{label_q}\n{user_inputs.get('question', '').strip()}")
-        inst = _instructions_block(instructions, lang)
-        if inst:
-            parts.append(inst)
         return "\n".join(parts)
 
     parts = []
 
-    # 0. 共通プロフィール
-    if profile:
+    # 1. AIへの指示・ルール（最初に置くことでAIが確実に認識）
+    if instructions and instructions.strip():
+        label = "【指示・ルール】" if lang == "ja" else "【Instructions】"
+        inst_lines = [f"- {l.strip()}" for l in instructions.strip().splitlines() if l.strip()]
+        parts.append(f"{label}\n" + "\n".join(inst_lines) + "\n")
+
+    # 2. ユーザー情報（include_profile が True の場合のみ）
+    if include_profile and profile:
         profile_lines = []
         for key, val in profile.items():
             if key.startswith("_"):
@@ -1103,10 +1096,22 @@ def build_prompt(
             parts.extend(profile_lines)
             parts.append("")
 
-    # 1. ロール定義
-    parts.append(f"【役割】\n{tmpl['role']}\n")
+    # 3. 役割定義（AIに質問内容に応じた最適な役割を想定させる）
+    if lang == "ja":
+        role_label = (
+            "【役割】\n"
+            "この質問・依頼内容に最も適した専門家・アシスタントとしての役割を自ら設定し、"
+            "その立場から回答してください。\n"
+        )
+    else:
+        role_label = (
+            "【Role】\n"
+            "Determine the most appropriate expert or assistant role for this question/request, "
+            "then respond from that perspective.\n"
+        )
+    parts.append(role_label)
 
-    # 2. 会話履歴・背景コンテキスト（あれば）
+    # 4. 会話履歴・背景コンテキスト（あれば）
     if context_history and context_history.strip():
         if lang == "ja":
             parts.append(
@@ -1123,30 +1128,31 @@ def build_prompt(
                 f"{context_history.strip()}\n"
             )
 
-    # 3. ユーザー入力（値があるフィールドのみ）
-    parts.append("【入力情報】")
+    # 5. 質問・依頼内容（値があるフィールドのみ）
+    input_lines = []
     for field in tmpl["fields"]:
         field_key = field[0]
         label = field[1]
         value = user_inputs.get(field_key, "").strip()
         if value:
-            clean_label = label.replace(" *", "")
-            parts.append(f"- {clean_label}: {value}")
+            if isinstance(label, dict):
+                clean_label = label.get(lang) or label.get("ja") or field_key
+            else:
+                clean_label = label.replace(" *", "")
+            input_lines.append(f"- {clean_label}: {value}")
+    if input_lines:
+        parts.append("【質問・依頼内容】" if lang == "ja" else "【Request】")
+        parts.extend(input_lines)
 
-    # 4. ルール
-    parts.append("\n【ルール】")
-    for rule in tmpl["rules"]:
-        parts.append(f"- {rule}")
-
-    # 5. 出力形式
-    parts.append(f"\n【出力形式】\n{tmpl['output_format']}")
-
-    # 6. 言語指示
-    parts.append(f"\n{tmpl['lang_instruction']}")
-
-    # 7. AIへの指示・ルール（末尾に付加）
-    inst = _instructions_block(instructions, lang)
-    if inst:
-        parts.append(inst)
+    # 6. 出力ルール（カテゴリルール＋出力形式＋言語指示を統合、全て箇条書き）
+    out_label = "【出力ルール】" if lang == "ja" else "【Output Rules】"
+    out_lines = [f"- {rule}" for rule in tmpl["rules"]]
+    # output_format が複数行の場合は各行に - を付ける
+    for line in tmpl["output_format"].splitlines():
+        line = line.strip()
+        if line:
+            out_lines.append(f"- {line}" if not line.startswith("-") else line)
+    out_lines.append(f"- {tmpl['lang_instruction']}")
+    parts.append(f"\n{out_label}\n" + "\n".join(out_lines))
 
     return "\n".join(parts)

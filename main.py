@@ -42,14 +42,18 @@ def api_fields():
 
 @app.route("/api/build_prompt", methods=["POST"])
 def api_build_prompt():
+    from storage import get_profile_for_category
     data = request.json
+    category = data["category"]
+    profile = get_profile_for_category(category)
     prompt = build_prompt(
-        data["category"], data["lang"],
+        category, data["lang"],
         data["user_inputs"],
-        profile=data.get("profile", {}),
+        profile=profile,
         simple_mode=data.get("simple_mode", False),
         context_history=data.get("context_history", ""),
         instructions=data.get("instructions", ""),
+        include_profile=data.get("include_profile", True),
     )
     return jsonify({"prompt": prompt})
 

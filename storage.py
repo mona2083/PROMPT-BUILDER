@@ -212,14 +212,33 @@ def save_profile(profile: dict) -> None:
 
 
 def get_profile_for_category(category: str) -> dict:
-    """カテゴリに対応するプロフィールグループを結合して返す。"""
+    """カテゴリに対応するプロフィールをラベル付きで返す。"""
     profile = load_profile()
+    fields_by_group = load_profile_fields()
     groups = CATEGORY_PROFILE_MAP.get(category, ["common"])
     result = {}
+
     for group in groups:
-        for key, val in profile.get(group, {}).items():
-            if not key.startswith("_") and val and str(val).strip():
-                result[key] = str(val).strip()
+        group_data = profile.get(group, {})
+        group_fields = fields_by_group.get(group, [])
+
+        # キー → ラベルのマッピングを作成
+        key_to_label = {}
+        for field in group_fields:
+            key = field[0]
+            label = field[1]
+            if isinstance(label, dict):
+                display_label = label.get("ja") or label.get("en") or key
+            else:
+                display_label = label or key
+            key_to_label[key] = display_label
+
+        for key, val in group_data.items():
+            if key.startswith("_") or not val or not str(val).strip():
+                continue
+            label = key_to_label.get(key, key)
+            result[label] = str(val).strip()
+
     return result
 
 
