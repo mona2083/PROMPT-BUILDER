@@ -17,4 +17,5 @@ __pycache__/
 
 # IDE
 .vscode/
-.idea/
+.idea/dist/
+build/
