@@ -63,7 +63,11 @@
 
   /* コンボボックス */
   .field-group { margin-bottom: 12px; }
-  .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px; }
+  .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px; }
+  .required-badge { font-size: 10px; font-weight: 700; color: #e03030;
+  background: #fff0f0; border: 1px solid #f0c0c0; border-radius: 3px;
+  padding: 1px 5px; flex-shrink: 0; }
   .combo-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
   .combo-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
     padding: 5px 8px; font-size: 12px; background: #f9f9f9;
@@ -911,6 +915,12 @@ async function loadCategory(key) {
     const lbl = document.createElement("div");
     lbl.className = "field-label";
     lbl.textContent = label;
+    if (required) {
+      const badge = document.createElement("span");
+      badge.className = "required-badge";
+      badge.textContent = lang === "ja" ? "必須" : "Required";
+      lbl.appendChild(badge);
+    }
     group.appendChild(lbl);
 
     // プルダウンがある場合のみコンボボックス表示

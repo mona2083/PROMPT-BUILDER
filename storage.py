@@ -222,7 +222,7 @@ def get_profile_for_category(category: str) -> dict:
         group_data = profile.get(group, {})
         group_fields = fields_by_group.get(group, [])
 
-        # キー → ラベルのマッピングを作成
+        # キー → ラベルのマッピングを作成（デフォルト＋カスタム両方）
         key_to_label = {}
         for field in group_fields:
             key = field[0]
@@ -233,10 +233,19 @@ def get_profile_for_category(category: str) -> dict:
                 display_label = label or key
             key_to_label[key] = display_label
 
+        # カスタムフィールドのラベルも追加
+        custom_fields = profile.get("_custom_fields", {})
+        if isinstance(custom_fields, dict):
+            for cf in custom_fields.get(group, []):
+                cf_key = cf.get("key", "")
+                cf_label = cf.get("label", cf_key)
+                if cf_key:
+                    key_to_label[cf_key] = cf_label
+
         for key, val in group_data.items():
             if key.startswith("_") or not val or not str(val).strip():
                 continue
-            label = key_to_label.get(key, key)
+            label = key_to_label.get(key, key)  # ラベルがなければキーをそのまま使用
             result[label] = str(val).strip()
 
     return result
