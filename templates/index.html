@@ -63,7 +63,11 @@
 
   /* コンボボックス */
   .field-group { margin-bottom: 12px; }
-  .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px; }
+  .field-label { font-size: 12px; font-weight: 600; color: #444; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px; }
+  .required-badge { font-size: 10px; font-weight: 700; color: #e03030;
+    background: #fff0f0; border: 1px solid #f0c0c0; border-radius: 3px;
+    padding: 1px 5px; flex-shrink: 0; }
   .combo-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
   .combo-select { flex: 1; border: 1px solid #ddd; border-radius: 6px;
     padding: 5px 8px; font-size: 12px; background: #f9f9f9;
@@ -773,11 +777,18 @@ window.onload = async () => {
 // ────────────────────────────────────────────
 let setupProvider = "gemini";
 
+function getLocalSettings() {
+  try { return JSON.parse(localStorage.getItem("ai_prompt_settings") || "{}"); } catch(e) { return {}; }
+}
+
+function saveLocalSettings(settings) {
+  try { localStorage.setItem("ai_prompt_settings", JSON.stringify(settings)); } catch(e) {}
+}
+
 async function checkFirstRun() {
-  const res = await fetch("/api/settings");
-  const data = await res.json();
-  const hasKey = (data.api_key && data.api_key.trim()) ||
-                 (data.openai_api_key && data.openai_api_key.trim());
+  const local = getLocalSettings();
+  const hasKey = (local.api_key && local.api_key.trim()) ||
+                 (local.openai_api_key && local.openai_api_key.trim());
   if (!hasKey) {
     document.getElementById("setup-modal").classList.add("open");
   }
@@ -836,21 +847,15 @@ async function saveSetup() {
   btn.disabled = true;
   btn.textContent = isJa ? "保存中..." : "Saving...";
 
-  const settings = await (await fetch("/api/settings")).json();
+  const existing = getLocalSettings();
   const body = {
-    api_key: setupProvider === "gemini" ? key : settings.api_key,
-    openai_api_key: setupProvider === "openai" ? key : settings.openai_api_key,
-    model: settings.model || "gemini-2.5-flash",
-    openai_model: settings.openai_model || "gpt-4o-mini",
+    api_key: setupProvider === "gemini" ? key : (existing.api_key || ""),
+    openai_api_key: setupProvider === "openai" ? key : (existing.openai_api_key || ""),
+    model: existing.model || "gemini-2.5-flash",
+    openai_model: existing.openai_model || "gpt-4o-mini",
     provider: setupProvider,
   };
-
-  await fetch("/api/save_settings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
+  saveLocalSettings(body);
   await loadSettingsUI();
   document.getElementById("setup-modal").classList.remove("open");
   btn.disabled = false;
@@ -910,6 +915,12 @@ async function loadCategory(key) {
     const lbl = document.createElement("div");
     lbl.className = "field-label";
     lbl.textContent = label;
+    if (required) {
+      const badge = document.createElement("span");
+      badge.className = "required-badge";
+      badge.textContent = lang === "ja" ? "必須" : "Required";
+      lbl.appendChild(badge);
+    }
     group.appendChild(lbl);
 
     // プルダウンがある場合のみコンボボックス表示
@@ -1737,7 +1748,7 @@ async function onSend() {
         : "You are a prompt engineer. Improve the following prompt.\n\n[Improvement Rules]\n- [Role] section: Set a specific expert persona best suited for this request (e.g., \"A specialist in X with 10+ years of hands-on experience\")\n- [Request] section: Rewrite the question, background, and expected output to be clearer, more specific, and concise\n- [Instructions], [User Profile], [Output Rules] sections: Do NOT modify\n- Do NOT use markdown (**, *, #, etc.)\n- Return ONLY the improved prompt. No preamble or explanation\n- Use consistent [SECTION] headers\n\n[PROMPT TO IMPROVE]\n";
       const optRes = await fetch("/api/ask_ai", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: optInstruction + templatePrompt })
+        body: JSON.stringify({ prompt: optInstruction + templatePrompt, ...getLocalSettings() })
       });
       const optData = await optRes.json();
       if (!optData.error && optData.answer) {
@@ -1760,7 +1771,7 @@ async function onSend() {
     // ── Step2: AIに送信（ONの場合）──
     const gRes = await fetch("/api/ask_ai", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: finalPrompt })
+      body: JSON.stringify({ prompt: finalPrompt, ...getLocalSettings() })
     });
     const gData = await gRes.json();
     if (gData.error) { setStatus("エラー: " + gData.error); }
@@ -1901,10 +1912,12 @@ function switchProvider(provider) {
 }
 
 async function loadSettingsUI() {
+  // APIキーはlocalStorageから、モデル一覧はサーバーから取得
+  const local = getLocalSettings();
   const res = await fetch("/api/settings");
   const data = await res.json();
-  document.getElementById("gemini-api-key-input").value = data.api_key || "";
-  document.getElementById("openai-api-key-input").value = data.openai_api_key || "";
+  document.getElementById("gemini-api-key-input").value = local.api_key || "";
+  document.getElementById("openai-api-key-input").value = local.openai_api_key || "";
   const geminiGroup = document.getElementById("gemini-model-group");
   geminiGroup.innerHTML = "";
   data.gemini_models.forEach(m => {
@@ -1931,13 +1944,13 @@ async function saveSettings() {
   const openaiKey = document.getElementById("openai-api-key-input").value.trim();
   const geminiModel = document.querySelector('input[name="gemini-model"]:checked')?.value || "gemini-2.5-flash";
   const openaiModel = document.querySelector('input[name="openai-model"]:checked')?.value || "gpt-4o-mini";
-  await fetch("/api/save_settings", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: geminiKey, openai_api_key: openaiKey,
-      model: geminiModel, openai_model: openaiModel, provider: currentProvider })
+  // APIキーはlocalStorageに保存（サーバーには送らない）
+  saveLocalSettings({
+    api_key: geminiKey, openai_api_key: openaiKey,
+    model: geminiModel, openai_model: openaiModel, provider: currentProvider
   });
   closeModal("settings-modal");
-  setStatus("設定を保存しました");
+  setStatus(lang === "ja" ? "設定を保存しました" : "Settings saved");
 }
 
 let templatePrompt = "";
