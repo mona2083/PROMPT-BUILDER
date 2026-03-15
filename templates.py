@@ -1058,6 +1058,7 @@ def build_prompt(
     context_history: str = "",
     instructions: str = "",
     include_profile: bool = True,
+    role_perspectives: str = "",
 ) -> str:
     tmpl = TEMPLATES[category_key][lang]
 
@@ -1096,20 +1097,28 @@ def build_prompt(
             parts.extend(profile_lines)
             parts.append("")
 
-    # 3. 役割定義（AIに質問内容に応じた最適な役割を想定させる）
+    # 3. 役割定義（スキル・経験・スタンスの3点セット）
     if lang == "ja":
-        role_label = (
+        role_base = (
             "【役割】\n"
-            "この質問・依頼内容に最も適した専門家・アシスタントとしての役割を自ら設定し、"
-            "その立場から回答してください。\n"
+            "以下の3点を踏まえた専門家・アシスタントとして回答してください。\n"
+            "- スキル: この質問・依頼に最も関連する専門領域・得意分野を自ら設定する\n"
+            "- 経験: 実務・研究・現場での豊富な経験を持つ専門家として\n"
+            "- スタンス: 正確さと実用性を重視し、不確かな情報は必ず明示する\n"
         )
+        if role_perspectives and role_perspectives.strip():
+            role_base += f"- 視点: {role_perspectives.strip()} の立場から回答する\n"
     else:
-        role_label = (
+        role_base = (
             "【Role】\n"
-            "Determine the most appropriate expert or assistant role for this question/request, "
-            "then respond from that perspective.\n"
+            "Respond as an expert/assistant based on the following 3 points:\n"
+            "- Skills: Set the most relevant expertise and specialty for this request\n"
+            "- Experience: As a practitioner with substantial real-world experience\n"
+            "- Stance: Prioritize accuracy and practicality; always flag uncertain information\n"
         )
-    parts.append(role_label)
+        if role_perspectives and role_perspectives.strip():
+            role_base += f"- Perspective: Respond from the viewpoint of {role_perspectives.strip()}\n"
+    parts.append(role_base)
 
     # 4. 会話履歴・背景コンテキスト（あれば）
     if context_history and context_history.strip():
