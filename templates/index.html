@@ -689,8 +689,15 @@
       <button class="setup-save-btn" id="setup-save-btn" onclick="saveSetup()">
         はじめる →
       </button>
-      <div class="setup-skip">
-        <a onclick="skipSetup()">後で設定する（設定ボタンから変更できます）</a>
+      <div style="margin-top:12px;border-top:1px solid #eee;padding-top:16px;">
+        <button onclick="skipSetup()" id="setup-skip-btn"
+          style="width:100%;background:#f5f5f5;color:#555;border:1px solid #ddd;
+          border-radius:10px;padding:12px;font-size:13px;cursor:pointer;">
+          🚀 <span id="setup-skip-label">APIキーなしでプロンプト生成のみ使う</span>
+        </button>
+        <p id="setup-skip-hint" style="text-align:center;font-size:11px;color:#aaa;margin-top:8px;">
+          AIへの送信なし・プロンプトのコピーのみ可能。あとから設定ボタンで追加できます。
+        </p>
       </div>
     </div>
   </div>
@@ -785,6 +792,8 @@ const UI = {
     setupKeyHint: "Google AI Studio でAPIキーを無料で取得できます。",
     setupSaveBtn: "はじめる →",
     setupSkip: "後で設定する（設定ボタンから変更できます）",
+    setupSkipBtn: "APIキーなしでプロンプト生成のみ使う",
+    setupSkipHint: "AIへの送信なし・プロンプトのコピーのみ可能。あとから設定ボタンで追加できます。",
     comboSaveBtn: "+ 保存",
     comboDelBtn: "削除",
   },
@@ -868,6 +877,8 @@ const UI = {
     setupKeyHint: "Get your free API key at Google AI Studio.",
     setupSaveBtn: "Get Started →",
     setupSkip: "Skip for now (you can set it later in Settings)",
+    setupSkipBtn: "Use without API key (prompt generation only)",
+    setupSkipHint: "No AI sending — copy prompts only. You can add an API key later in Settings.",
     comboSaveBtn: "+ Save",
     comboDelBtn: "Delete",
   }
@@ -932,7 +943,9 @@ async function checkFirstRun() {
   const local = getLocalSettings();
   const hasKey = (local.api_key && local.api_key.trim()) ||
                  (local.openai_api_key && local.openai_api_key.trim());
-  if (!hasKey) {
+  const hasSkipped = local.setup_skipped === true;
+  // APIキー未設定 かつ スキップ済みでない場合のみ表示
+  if (!hasKey && !hasSkipped) {
     document.getElementById("setup-modal").classList.add("open");
   }
 }
@@ -954,6 +967,13 @@ function updateSetupLabels() {
   // Update key label and hint based on current provider
   const prov = document.querySelector(".setup-provider-card.selected")?.id?.replace("setup-card-", "") || "gemini";
   selectSetupProvider(prov);
+
+  // Skip button
+  const skipBtn = document.getElementById("setup-skip-btn");
+  const skipLabel = document.getElementById("setup-skip-label");
+  const skipHint = document.getElementById("setup-skip-hint");
+  if (skipLabel) skipLabel.textContent = ui.setupSkipBtn || skipLabel.textContent;
+  if (skipHint) skipHint.textContent = ui.setupSkipHint || skipHint.textContent;
 
   // Desc cards
   const setupDescGemini = document.getElementById("setup-desc-gemini");
@@ -1036,8 +1056,11 @@ async function saveSetup() {
 }
 
 function skipSetup() {
+  // APIキーなしでプロンプト生成のみモードとして開始
+  const local = getLocalSettings();
+  local.setup_skipped = true;
+  saveLocalSettings(local);
   document.getElementById("setup-modal").classList.remove("open");
-  openSettings();
 }
 
 function buildTabs() {
@@ -1698,7 +1721,34 @@ function updateSendBtn() {
     sendToApi ? UI[lang].send : UI[lang].promptOnly;
 }
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("send-to-api").addEventListener("change", updateSendBtn);
+  document.getElementById("send-to-api").addEventListener("change", function() {
+    updateSendBtn();
+    // APIキーが未設定の場合、チェックON時にsetupモーダルを表示
+    if (this.checked) {
+      const local = getLocalSettings();
+      const hasKey = (local.api_key && local.api_key.trim()) ||
+                     (local.openai_api_key && local.openai_api_key.trim());
+      if (!hasKey) {
+        this.checked = false;
+        updateSendBtn();
+        document.getElementById("setup-modal").classList.add("open");
+        updateSetupLabels();
+      }
+    }
+  });
+  document.getElementById("optimize-prompt").addEventListener("change", function() {
+    // APIキーが未設定の場合、チェックON時にsetupモーダルを表示
+    if (this.checked) {
+      const local = getLocalSettings();
+      const hasKey = (local.api_key && local.api_key.trim()) ||
+                     (local.openai_api_key && local.openai_api_key.trim());
+      if (!hasKey) {
+        this.checked = false;
+        document.getElementById("setup-modal").classList.add("open");
+        updateSetupLabels();
+      }
+    }
+  });
   // optimize と send-to-api は独立して動作
 });
 
