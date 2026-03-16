@@ -135,8 +135,10 @@ PROFILE_FILE = "profile.json"
 CATEGORY_PROFILE_MAP = {
     "ai_pm":    ["common", "tech"],
     "code":     ["common", "tech"],
+    "app_dev":  ["common", "tech"],   
+    "ai_ml":    ["common", "tech"],  
     "health":   ["common", "life"],
-    "recipe":   ["common", "recipe"],   # ← lifeからrecipeに変更
+    "recipe":   ["common", "recipe"],
     "study":    ["common", "study"],
     "language": ["common", "study"],
     "chat":     ["common"],

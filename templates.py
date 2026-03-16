@@ -40,8 +40,8 @@ LANG_UI = {
 # カテゴリ名
 # ────────────────────────────────────────────
 CATEGORIES = {
-    "ja": ["AI-PM", "コード", "生活・健康", "大学勉強", "語学学習", "チャット", "レシピ", "その他"],
-    "en": ["AI-PM", "Code", "Health & Life", "Study", "Language", "Chat", "Recipe", "Other"],
+    "ja": ["AI-PM", "コード", "アプリ開発", "AIモデル開発", "生活・健康", "大学勉強", "語学学習", "チャット", "レシピ", "その他"],
+    "en": ["AI-PM", "Code", "App Dev", "AI/ML Dev", "Health & Life", "Study", "Language", "Chat", "Recipe", "Other"],
 }
 
 CATEGORY_KEY_MAP = {
@@ -58,6 +58,10 @@ CATEGORY_KEY_MAP = {
     "Chat":          "chat",
     "レシピ":         "recipe",
     "Recipe":        "recipe",
+    "アプリ開発":      "app_dev",
+    "App Dev":       "app_dev",
+    "AIモデル開発":   "ai_ml",
+    "AI/ML Dev":     "ai_ml",
     "その他":         "other",
     "Other":         "other",
 }
@@ -889,7 +893,321 @@ TEMPLATES = {
         },
     },
 
-    # ── Other / その他 ─────────────────────────────────────────────
+    # ── App Dev / アプリ開発 ──────────────────────────────────────────
+    "app_dev": {
+        "ja": {
+            "role": (
+                "あなたはWebアプリ・モバイルアプリ・APIの設計から実装・デプロイまでを一貫して手がけてきた"
+                "フルスタックエンジニアです。10年以上の開発経験を持ち、スタートアップから大企業まで"
+                "多様な規模のプロダクト開発に携わってきました。"
+                "要件の曖昧さを早期に指摘し、スケーラビリティ・セキュリティ・保守性を常に考慮した設計を提案します。"
+                "技術選定には理由を明示し、トレードオフを正直に伝えます。"
+            ),
+            "fields": [
+                ("app_type", "アプリ種別", "例: Webアプリ / API / CLIツール", False, [
+                    "Webアプリ（フルスタック）",
+                    "フロントエンド（SPA）",
+                    "バックエンド / REST API",
+                    "CLI ツール",
+                    "デスクトップアプリ",
+                    "モバイルアプリ（iOS/Android）",
+                    "ブラウザ拡張機能",
+                    "スクリプト・自動化ツール",
+                ]),
+                ("stack", "技術スタック", "例: Flask + React / FastAPI + Next.js", False, [
+                    "Flask + HTML/CSS/JS",
+                    "Flask + React",
+                    "FastAPI + React",
+                    "FastAPI + Next.js",
+                    "Django + HTML/CSS",
+                    "Node.js + Express",
+                    "Next.js（フルスタック）",
+                    "Python スクリプトのみ",
+                    "まだ決めていない（提案してほしい）",
+                ]),
+                ("current_state", "現在の状況", "例: 新規開発 / 既存コードあり", False, [
+                    "新規開発（ゼロから）",
+                    "既存コードの機能追加",
+                    "既存コードのリファクタリング",
+                    "バグ修正・デバッグ",
+                    "パフォーマンス改善",
+                    "セキュリティ改善",
+                    "テスト追加",
+                ]),
+                ("deploy", "デプロイ先", "例: Render / AWS / ローカルのみ", False, [
+                    "ローカルのみ（デプロイなし）",
+                    "Render",
+                    "Railway",
+                    "Vercel",
+                    "AWS（EC2 / Lambda）",
+                    "Google Cloud Run",
+                    "Docker コンテナ",
+                    "まだ決めていない",
+                ]),
+                ("question", "質問・依頼内容", "例: ログイン機能を実装したい", True, []),
+                ("output_expectation", "期待する出力", "例: 設計案＋実装コード", False, [
+                    "設計案・アーキテクチャ提案",
+                    "実装コード（主要部分）",
+                    "設計案＋実装コード",
+                    "コードレビュー＋改善案",
+                    "デバッグ＋原因説明",
+                    "技術選定の比較・推奨",
+                    "ステップバイステップの実装手順",
+                ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
+            ],
+            "rules": [
+                "要件が曖昧な場合は実装前に確認事項を明示してください。",
+                "セキュリティ上の問題（認証・入力検証・APIキー管理など）があれば必ず指摘してください。",
+                "技術選定や設計の判断には必ず理由とトレードオフを明示してください。",
+                "コードにはコメント（なぜそうしているか）を適切に含めてください。",
+            ],
+            "output_format": "",
+            "lang_instruction": "必ず日本語で回答してください。",
+        },
+        "en": {
+            "role": (
+                "You are a full-stack engineer who has designed, built, and deployed web apps, mobile apps, and APIs end-to-end. "
+                "With 10+ years of experience across startups and enterprises, you have a sharp eye for ambiguous requirements. "
+                "You always consider scalability, security, and maintainability from the start. "
+                "You state reasons for technical decisions clearly and honestly communicate trade-offs."
+            ),
+            "fields": [
+                ("app_type", "App type", "e.g. Web app / API / CLI tool", False, [
+                    "Full-stack web app",
+                    "Frontend (SPA)",
+                    "Backend / REST API",
+                    "CLI tool",
+                    "Desktop app",
+                    "Mobile app (iOS/Android)",
+                    "Browser extension",
+                    "Script / automation tool",
+                ]),
+                ("stack", "Tech stack", "e.g. Flask + React / FastAPI + Next.js", False, [
+                    "Flask + HTML/CSS/JS",
+                    "Flask + React",
+                    "FastAPI + React",
+                    "FastAPI + Next.js",
+                    "Django + HTML/CSS",
+                    "Node.js + Express",
+                    "Next.js (full-stack)",
+                    "Python script only",
+                    "Not decided (suggest one)",
+                ]),
+                ("current_state", "Current state", "e.g. New / Existing codebase", False, [
+                    "New project (from scratch)",
+                    "Adding features to existing code",
+                    "Refactoring existing code",
+                    "Bug fix / debugging",
+                    "Performance improvement",
+                    "Security improvement",
+                    "Adding tests",
+                ]),
+                ("deploy", "Deployment target", "e.g. Render / AWS / local only", False, [
+                    "Local only (no deployment)",
+                    "Render",
+                    "Railway",
+                    "Vercel",
+                    "AWS (EC2 / Lambda)",
+                    "Google Cloud Run",
+                    "Docker container",
+                    "Not decided yet",
+                ]),
+                ("question", "Question / Request", "e.g. I want to implement login functionality", True, []),
+                ("output_expectation", "Expected output", "e.g. Architecture proposal + code", False, [
+                    "Architecture / design proposal",
+                    "Implementation code (key parts)",
+                    "Design + implementation code",
+                    "Code review + improvements",
+                    "Debug + explanation",
+                    "Tech comparison & recommendation",
+                    "Step-by-step implementation guide",
+                ]),
+                ("notes", "Additional notes", "Any other context or special instructions", False, []),
+            ],
+            "rules": [
+                "If requirements are ambiguous, list clarifying questions before implementing.",
+                "Always flag security issues (auth, input validation, API key handling, etc.).",
+                "State reasons and trade-offs for all technical decisions.",
+                "Include meaningful comments (the 'why') in all code.",
+            ],
+            "output_format": "",
+            "lang_instruction": "Please respond in English.",
+        },
+    },
+
+    # ── AI/ML Dev / AIモデル開発 ──────────────────────────────────────
+    "ai_ml": {
+        "ja": {
+            "role": (
+                "あなたはMLシステムの研究から本番運用まで一貫して手がけてきたMLエンジニア兼リサーチャーです。"
+                "論文実装・モデル選定・学習パイプライン構築・評価・本番デプロイの全工程に精通しています。"
+                "再現性・実験管理・データの品質を最重視し、過学習やデータリークに対して常に警戒しています。"
+                "最新の手法を把握しつつ、実務で本当に有効かどうかを批判的に評価します。"
+            ),
+            "fields": [
+                ("task_type", "タスク種別", "例: 二値分類 / 物体検出 / テキスト生成", False, [
+                    "二値分類",
+                    "多クラス分類",
+                    "回帰",
+                    "クラスタリング",
+                    "テキスト分類（NLP）",
+                    "固有表現抽出（NER）",
+                    "テキスト生成・要約",
+                    "画像分類（CV）",
+                    "物体検出",
+                    "セマンティックセグメンテーション",
+                    "推薦システム",
+                    "異常検知",
+                    "時系列予測",
+                    "RAG / LLM活用",
+                ]),
+                ("dataset", "データセット情報", "例: 表形式・10万件・不均衡比1:10", False, [
+                    "表形式データ（均衡）",
+                    "表形式データ（不均衡）",
+                    "テキストデータ",
+                    "画像データ",
+                    "時系列データ",
+                    "マルチモーダル（テキスト＋画像など）",
+                    "データなし（設計段階）",
+                ]),
+                ("architecture", "アーキテクチャ・モデル", "例: BERT / ResNet / XGBoost", False, [
+                    "未定（提案してほしい）",
+                    "LightGBM / XGBoost",
+                    "scikit-learn（ロジスティック回帰など）",
+                    "BERT / RoBERTa",
+                    "GPT系 / LLM（ファインチューニング）",
+                    "ResNet / EfficientNet",
+                    "Vision Transformer（ViT）",
+                    "LSTM / GRU",
+                    "Transformer（スクラッチ実装）",
+                    "カスタムアーキテクチャ",
+                ]),
+                ("env", "学習環境", "例: MacBook MPS / Google Colab / AWS GPU", False, [
+                    "MacBook（MPS / CPU）",
+                    "Google Colab（GPU）",
+                    "Linux（CUDA GPU）",
+                    "AWS / GCP / Azure（クラウドGPU）",
+                    "Docker コンテナ",
+                ]),
+                ("metric", "評価指標", "例: F1スコア / RMSE / AUC", False, [
+                    "Accuracy",
+                    "F1スコア（マクロ / マイクロ）",
+                    "Precision / Recall",
+                    "AUC-ROC",
+                    "RMSE / MAE",
+                    "BLEU / ROUGE",
+                    "カスタム指標（説明を記載）",
+                ]),
+                ("question", "質問・依頼内容", "例: モデルの精度が上がらない原因を教えてください", True, []),
+                ("output_expectation", "期待する出力", "例: 原因分析＋改善策コード", False, [
+                    "モデル設計・アーキテクチャ提案",
+                    "学習パイプラインのコード",
+                    "原因分析＋改善策",
+                    "ハイパーパラメータチューニング戦略",
+                    "評価・可視化コード",
+                    "論文手法の実装",
+                    "本番デプロイ設計",
+                ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
+            ],
+            "rules": [
+                "データリーク・過学習のリスクがあれば必ず指摘してください。",
+                "再現性確保のためにシード固定・実験管理の方法を含めてください。",
+                "手法の選択には理由と想定される限界を明示してください。",
+                "最新手法を提案する場合は実務での実績・信頼性についても言及してください。",
+                "評価は訓練データではなく必ず検証・テストデータで行うよう強調してください。",
+            ],
+            "output_format": "",
+            "lang_instruction": "必ず日本語で回答してください。",
+        },
+        "en": {
+            "role": (
+                "You are an ML engineer and researcher who has taken ML systems from research to production. "
+                "You are proficient across the entire pipeline: paper implementation, model selection, training, evaluation, and deployment. "
+                "You prioritize reproducibility, experiment management, and data quality above all. "
+                "You are always on guard for overfitting and data leakage. "
+                "You stay current with the latest methods while critically evaluating their real-world effectiveness."
+            ),
+            "fields": [
+                ("task_type", "Task type", "e.g. Binary classification / Object detection / Text generation", False, [
+                    "Binary classification",
+                    "Multi-class classification",
+                    "Regression",
+                    "Clustering",
+                    "Text classification (NLP)",
+                    "Named entity recognition (NER)",
+                    "Text generation / summarization",
+                    "Image classification (CV)",
+                    "Object detection",
+                    "Semantic segmentation",
+                    "Recommendation system",
+                    "Anomaly detection",
+                    "Time series forecasting",
+                    "RAG / LLM application",
+                ]),
+                ("dataset", "Dataset info", "e.g. Tabular, 100k rows, imbalanced 1:10", False, [
+                    "Tabular data (balanced)",
+                    "Tabular data (imbalanced)",
+                    "Text data",
+                    "Image data",
+                    "Time series data",
+                    "Multimodal (text + image, etc.)",
+                    "No data yet (design stage)",
+                ]),
+                ("architecture", "Architecture / Model", "e.g. BERT / ResNet / XGBoost", False, [
+                    "Not decided (suggest one)",
+                    "LightGBM / XGBoost",
+                    "scikit-learn (logistic regression, etc.)",
+                    "BERT / RoBERTa",
+                    "GPT-based / LLM (fine-tuning)",
+                    "ResNet / EfficientNet",
+                    "Vision Transformer (ViT)",
+                    "LSTM / GRU",
+                    "Transformer (from scratch)",
+                    "Custom architecture",
+                ]),
+                ("env", "Training environment", "e.g. MacBook MPS / Google Colab / AWS GPU", False, [
+                    "MacBook (MPS / CPU)",
+                    "Google Colab (GPU)",
+                    "Linux (CUDA GPU)",
+                    "AWS / GCP / Azure (cloud GPU)",
+                    "Docker container",
+                ]),
+                ("metric", "Evaluation metric", "e.g. F1 score / RMSE / AUC", False, [
+                    "Accuracy",
+                    "F1 score (macro / micro)",
+                    "Precision / Recall",
+                    "AUC-ROC",
+                    "RMSE / MAE",
+                    "BLEU / ROUGE",
+                    "Custom metric (describe below)",
+                ]),
+                ("question", "Question / Request", "e.g. Why is my model not improving?", True, []),
+                ("output_expectation", "Expected output", "e.g. Root cause analysis + improved code", False, [
+                    "Model design / architecture proposal",
+                    "Training pipeline code",
+                    "Root cause analysis + fixes",
+                    "Hyperparameter tuning strategy",
+                    "Evaluation & visualization code",
+                    "Paper method implementation",
+                    "Production deployment design",
+                ]),
+                ("notes", "Additional notes", "Any other context or special instructions", False, []),
+            ],
+            "rules": [
+                "Always flag data leakage and overfitting risks.",
+                "Include seed fixing and experiment tracking for reproducibility.",
+                "State reasons and expected limitations for all method choices.",
+                "When proposing recent methods, comment on their real-world reliability.",
+                "Always emphasize evaluating on validation/test data, never training data.",
+            ],
+            "output_format": "",
+            "lang_instruction": "Please respond in English.",
+        },
+    },
+
+        # ── Other / その他 ─────────────────────────────────────────────
     "other": {
         "ja": {
             "role": (
