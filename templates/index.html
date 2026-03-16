@@ -643,11 +643,17 @@
 <div class="setup-overlay" id="setup-modal">
   <div class="setup-modal">
     <div class="setup-hero">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+        <button onclick="toggleLang();updateSetupLabels();"
+          style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);
+          color:#fff;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;"
+          id="setup-lang-btn">EN</button>
+      </div>
       <h1>🤖 AI Prompt Builder</h1>
-      <p id="setup-subtitle" id="settings-intro-text">まず、使用するAIサービスを選んでください</p>
+      <p id="setup-subtitle">まず、使用するAIサービスを選んでください</p>
     </div>
     <div class="setup-body">
-      <div class="setup-step" id="setup-step-label" id="settings-step1-text">Step 1 — AIサービスを選択</div>
+      <div class="setup-step" id="setup-step-label">Step 1 — AIサービスを選択</div>
 
       <!-- Provider Choice -->
       <div class="setup-provider-choice">
@@ -773,6 +779,12 @@ const UI = {
     settingsSaveBtn: "保存",
     settingsIntro: "まず、使用するAIサービスを選んでください",
     settingsStep1: "Step 1 — AIサービスを選択",
+    setupKeyLabel: "Gemini APIキー",
+    setupKeyLink: "🔑 APIキーを取得 →",
+    setupKeyPlaceholder: "APIキーを貼り付けてください...",
+    setupKeyHint: "Google AI Studio でAPIキーを無料で取得できます。",
+    setupSaveBtn: "はじめる →",
+    setupSkip: "後で設定する（設定ボタンから変更できます）",
     comboSaveBtn: "+ 保存",
     comboDelBtn: "削除",
   },
@@ -850,6 +862,12 @@ const UI = {
     settingsSaveBtn: "Save",
     settingsIntro: "Choose the AI service you want to use",
     settingsStep1: "Step 1 — Select AI Service",
+    setupKeyLabel: "Gemini API Key",
+    setupKeyLink: "🔑 Get API Key →",
+    setupKeyPlaceholder: "Paste your API key here...",
+    setupKeyHint: "Get your free API key at Google AI Studio.",
+    setupSaveBtn: "Get Started →",
+    setupSkip: "Skip for now (you can set it later in Settings)",
     comboSaveBtn: "+ Save",
     comboDelBtn: "Delete",
   }
@@ -919,6 +937,33 @@ async function checkFirstRun() {
   }
 }
 
+function updateSetupLabels() {
+  const ui = UI[lang];
+  const isJa = lang === "ja";
+  const s = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const sp = (id, text) => { const el = document.getElementById(id); if (el) el.placeholder = text; };
+
+  s("setup-lang-btn", isJa ? "EN" : "JA");
+  s("setup-subtitle", ui.settingsIntro);
+  s("setup-step-label", ui.settingsStep1);
+  s("setup-save-btn", ui.setupSaveBtn);
+  sp("setup-key-input", ui.setupKeyPlaceholder);
+  const skipEl = document.querySelector(".setup-skip a");
+  if (skipEl) skipEl.textContent = ui.setupSkip;
+
+  // Update key label and hint based on current provider
+  const prov = document.querySelector(".setup-provider-card.selected")?.id?.replace("setup-card-", "") || "gemini";
+  selectSetupProvider(prov);
+
+  // Desc cards
+  const setupDescGemini = document.getElementById("setup-desc-gemini");
+  const setupDescOpenAI = document.getElementById("setup-desc-openai");
+  if (setupDescGemini) setupDescGemini.innerHTML = isJa
+    ? "無料枠あり<br>日本語対応◎" : "Free tier available<br>Great for Japanese";
+  if (setupDescOpenAI) setupDescOpenAI.innerHTML = isJa
+    ? "GPT-4o対応<br>高精度" : "GPT-4o available<br>High accuracy";
+}
+
 function selectSetupProvider(provider) {
   setupProvider = provider;
   document.getElementById("setup-card-gemini").classList.toggle("selected", provider === "gemini");
@@ -928,7 +973,9 @@ function selectSetupProvider(provider) {
   const isJa = lang === "ja";
 
   document.getElementById("setup-key-label-text").textContent =
-    isGemini ? "Gemini APIキー" : "OpenAI APIキー";
+    isGemini
+      ? (isJa ? "Gemini APIキー" : "Gemini API Key")
+      : (isJa ? "OpenAI APIキー" : "OpenAI API Key");
   document.getElementById("setup-key-input").placeholder =
     isGemini ? "AIza..." : "sk-...";
   document.getElementById("setup-key-link").href =
@@ -2154,10 +2201,8 @@ function updateStaticLabels() {
   set("settings-openai-key-label",  ui.settingsOpenAIKey);
   set("settings-openai-model-label",ui.settingsModel);
   set("settings-save-btn",          ui.settingsSaveBtn);
-  const introEl = document.getElementById("settings-intro-text");
-  if (introEl) introEl.textContent = ui.settingsIntro || introEl.textContent;
-  const step1El = document.getElementById("settings-step1-text");
-  if (step1El) step1El.textContent = ui.settingsStep1 || step1El.textContent;
+  // Setup modal (if visible)
+  updateSetupLabels();
 }
 
 function toggleLang() {

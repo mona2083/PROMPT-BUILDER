@@ -86,6 +86,20 @@ TEMPLATES = {
                 "曖昧な状況でも意思決定を前進させることを最重視します。"
             ),
             "fields": [
+                ("lang_stack", "技術スタック・言語", "例: Python / FastAPI / PostgreSQL / AWS", False, [
+                    "Python / FastAPI / PostgreSQL",
+                    "Python / Django / MySQL",
+                    "Python / Flask / SQLite",
+                    "Node.js / Express / MongoDB",
+                    "TypeScript / Next.js / Supabase",
+                    "Java / Spring Boot / MySQL",
+                    "まだ決まっていない",
+                ]),
+                ("constraints", "制約・条件", "例: 6ヶ月・予算500万円・GDPR対応必須", False, [
+                    "期間3ヶ月以内", "期間6ヶ月以内", "期間1年以内",
+                    "予算制約あり（要確認）", "規制対応必須（GDPR・個人情報保護法）",
+                    "既存システムへの統合必須", "オンプレ環境限定",
+                ]),
                 ("phase", "フェーズ", "例: 評価フェーズ完了後", False, [
                     "要件定義フェーズ", "データ収集・整備フェーズ", "モデル開発フェーズ",
                     "評価フェーズ", "評価フェーズ完了後", "本番移行直前",
@@ -126,6 +140,20 @@ TEMPLATES = {
                 "Your defining trait: you move decisions forward even in ambiguous situations."
             ),
             "fields": [
+                ("lang_stack", "Tech stack & language", "e.g. Python / FastAPI / PostgreSQL / AWS", False, [
+                    "Python / FastAPI / PostgreSQL",
+                    "Python / Django / MySQL",
+                    "Python / Flask / SQLite",
+                    "Node.js / Express / MongoDB",
+                    "TypeScript / Next.js / Supabase",
+                    "Java / Spring Boot / MySQL",
+                    "Not decided yet",
+                ]),
+                ("constraints", "Constraints / Requirements", "e.g. 6 months / $50k budget / GDPR compliance", False, [
+                    "Under 3 months", "Under 6 months", "Under 1 year",
+                    "Budget constraints (TBD)", "Regulatory compliance required (GDPR, etc.)",
+                    "Must integrate with existing system", "On-premise only",
+                ]),
                 ("phase", "Phase", "e.g. Post-evaluation, pre-production", False, [
                     "Requirements definition", "Data collection & preparation",
                     "Model development", "Evaluation phase", "Post-evaluation",
@@ -170,13 +198,20 @@ TEMPLATES = {
                 "頼まれていないコードは書きません。まず問題を理解してから実装を提案します。"
             ),
             "fields": [
-                ("env", "実行環境", "例: macOS / Python 3.11 / torch==2.3", False, [
-                    "macOS / Python 3.11 / CPU",
-                    "macOS / Python 3.11 / MPS (Apple Silicon)",
-                    "Linux / Python 3.11 / CUDA",
-                    "Windows / Python 3.10 / CPU",
-                    "Google Colab / Python 3.10 / GPU",
-                    "Docker / Python 3.11",
+                ("language", "プログラミング言語", "例: Python 3.11", True, [
+                    "Python 3.11", "Python 3.10", "Python 3.9",
+                    "JavaScript (Node.js)", "TypeScript",
+                    "Go", "Rust", "Java", "Kotlin", "Swift",
+                    "C++", "C#", "Ruby",
+                ]),
+                ("libraries", "主要ライブラリ・バージョン", "例: torch==2.3, transformers==4.40", False, []),
+                ("env", "実行環境", "例: macOS / MPS (Apple Silicon)", False, [
+                    "macOS / CPU",
+                    "macOS / MPS (Apple Silicon)",
+                    "Linux / CUDA GPU",
+                    "Windows / CPU",
+                    "Google Colab / GPU",
+                    "Docker コンテナ",
                     "Jupyter Notebook",
                 ]),
                 ("purpose", "目的（1文）", "例: BERTで文章をベクトル化する関数を作りたい", False, []),
@@ -225,13 +260,20 @@ TEMPLATES = {
                 "You never write code that wasn't asked for. You understand the problem first, then propose an implementation."
             ),
             "fields": [
-                ("env", "Environment", "e.g. macOS / Python 3.11 / MPS", False, [
-                    "macOS / Python 3.11 / CPU",
-                    "macOS / Python 3.11 / MPS (Apple Silicon)",
-                    "Linux / Python 3.11 / CUDA",
-                    "Windows / Python 3.10 / CPU",
-                    "Google Colab / Python 3.10 / GPU",
-                    "Docker / Python 3.11",
+                ("language", "Programming language", "e.g. Python 3.11", True, [
+                    "Python 3.11", "Python 3.10", "Python 3.9",
+                    "JavaScript (Node.js)", "TypeScript",
+                    "Go", "Rust", "Java", "Kotlin", "Swift",
+                    "C++", "C#", "Ruby",
+                ]),
+                ("libraries", "Key libraries & versions", "e.g. torch==2.3, transformers==4.40", False, []),
+                ("env", "Environment", "e.g. macOS / MPS (Apple Silicon)", False, [
+                    "macOS / CPU",
+                    "macOS / MPS (Apple Silicon)",
+                    "Linux / CUDA GPU",
+                    "Windows / CPU",
+                    "Google Colab / GPU",
+                    "Docker container",
                     "Jupyter Notebook",
                 ]),
                 ("purpose", "Purpose in 1 line", "e.g. Vectorize sentences using BERT", False, []),
@@ -424,10 +466,7 @@ TEMPLATES = {
                 "間違いやすいポイントと典型的な誤解を明示してください。",
                 "答えを直接教えるのではなく、理解を確認しながら進めてください。",
             ],
-            "output_format": (
-                "以下のセクション順で回答してください（マークダウン見出し不要）：\n"
-                "直感的な説明 → 具体例 → 正式な定義・数式 → よくある誤解 → 理解確認の小問（2問） → 次に学ぶべきトピック"
-            ),
+            "output_format": "",
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
@@ -483,10 +522,7 @@ TEMPLATES = {
                 "Explicitly flag common mistakes and misconceptions.",
                 "Guide understanding step by step rather than giving direct answers.",
             ],
-            "output_format": (
-                "Structure your response in this order (no markdown headers):\n"
-                "Intuitive explanation → Concrete example → Formal definition → Common misconceptions → Quick check questions (x2) → What to study next"
-            ),
+            "output_format": "",
             "lang_instruction": "Please respond in English.",
         },
     },
@@ -562,10 +598,7 @@ TEMPLATES = {
                 "発音のポイントがある場合は補足してください。",
                 "練習問題や確認テストを含めると効果的です。",
             ],
-            "output_format": (
-                "以下のセクション順で回答してください（マークダウン見出し不要）：\n"
-                "今日のテーマ → 重要表現・単語（例文付き） → 練習問題 → よくある間違いと注意点 → 次のステップ"
-            ),
+            "output_format": "",
             "lang_instruction": "解説は日本語で行い、学習対象言語の例文・表現は元の言語で記載してください。",
         },
         "en": {
@@ -632,10 +665,7 @@ TEMPLATES = {
                 "Include pronunciation tips when relevant.",
                 "Add practice exercises or a short quiz when helpful.",
             ],
-            "output_format": (
-                "Structure your response in this order (no markdown headers):\n"
-                "Today's theme → Key expressions & vocabulary (with examples) → Practice exercises → Common mistakes & tips → Next steps"
-            ),
+            "output_format": "",
             "lang_instruction": "Provide explanations in English. Write target language examples in the target language.",
         },
     },
@@ -717,11 +747,7 @@ TEMPLATES = {
                 "会話練習の場合は、相手の発言の自然さや文法についてさりげなく補足してください。",
                 "ロールプレイ中はペルソナを崩さないようにしてください。",
             ],
-            "output_format": (
-                "会話形式で返答してください。\n"
-                "練習目的の場合は返答の最後に【フィードバック】セクションを追加し、"
-                "改善点や良かった点を簡潔に伝えてください。"
-            ),
+            "output_format": "",
             "lang_instruction": "会話する言語の設定に従ってください。設定がない場合は日本語で回答してください。",
         },
         "en": {
@@ -798,11 +824,7 @@ TEMPLATES = {
                 "For practice purposes, subtly point out unnatural expressions or grammar issues.",
                 "Do not break character during roleplay.",
             ],
-            "output_format": (
-                "Respond in dialogue format.\n"
-                "For practice purposes, add a [Feedback] section at the end of your reply "
-                "with brief notes on what was good and what could be improved."
-            ),
+            "output_format": "",
             "lang_instruction": "Follow the language setting defined above. Default to English if not specified.",
         },
     },
@@ -914,7 +936,13 @@ TEMPLATES = {
                     "ブラウザ拡張機能",
                     "スクリプト・自動化ツール",
                 ]),
-                ("stack", "技術スタック", "例: Flask + React / FastAPI + Next.js", False, [
+                ("language", "開発言語", "例: Python / TypeScript", True, [
+                    "Python", "TypeScript", "JavaScript",
+                    "Go", "Rust", "Java", "Kotlin",
+                    "Swift", "Dart (Flutter)", "Ruby",
+                    "まだ決めていない（提案してほしい）",
+                ]),
+                ("stack", "技術スタック・フレームワーク", "例: Flask + React / FastAPI + Next.js", False, [
                     "Flask + HTML/CSS/JS",
                     "Flask + React",
                     "FastAPI + React",
@@ -924,6 +952,19 @@ TEMPLATES = {
                     "Next.js（フルスタック）",
                     "Python スクリプトのみ",
                     "まだ決めていない（提案してほしい）",
+                ]),
+                ("db_auth", "DB・認証の有無", "例: PostgreSQL・JWT認証あり", False, [
+                    "DBなし",
+                    "SQLite（ローカル開発）",
+                    "PostgreSQL",
+                    "MySQL",
+                    "MongoDB",
+                    "Supabase",
+                    "Firebase",
+                    "認証なし",
+                    "セッション認証",
+                    "JWT認証",
+                    "OAuth（Google/GitHub等）",
                 ]),
                 ("current_state", "現在の状況", "例: 新規開発 / 既存コードあり", False, [
                     "新規開発（ゼロから）",
@@ -983,7 +1024,13 @@ TEMPLATES = {
                     "Browser extension",
                     "Script / automation tool",
                 ]),
-                ("stack", "Tech stack", "e.g. Flask + React / FastAPI + Next.js", False, [
+                ("language", "Programming language", "e.g. Python / TypeScript", True, [
+                    "Python", "TypeScript", "JavaScript",
+                    "Go", "Rust", "Java", "Kotlin",
+                    "Swift", "Dart (Flutter)", "Ruby",
+                    "Not decided (suggest one)",
+                ]),
+                ("stack", "Tech stack & framework", "e.g. Flask + React / FastAPI + Next.js", False, [
                     "Flask + HTML/CSS/JS",
                     "Flask + React",
                     "FastAPI + React",
@@ -993,6 +1040,19 @@ TEMPLATES = {
                     "Next.js (full-stack)",
                     "Python script only",
                     "Not decided (suggest one)",
+                ]),
+                ("db_auth", "DB & authentication", "e.g. PostgreSQL + JWT auth", False, [
+                    "No DB needed",
+                    "SQLite (local dev)",
+                    "PostgreSQL",
+                    "MySQL",
+                    "MongoDB",
+                    "Supabase",
+                    "Firebase",
+                    "No auth needed",
+                    "Session-based auth",
+                    "JWT auth",
+                    "OAuth (Google/GitHub etc.)",
                 ]),
                 ("current_state", "Current state", "e.g. New / Existing codebase", False, [
                     "New project (from scratch)",
@@ -1046,6 +1106,26 @@ TEMPLATES = {
                 "最新の手法を把握しつつ、実務で本当に有効かどうかを批判的に評価します。"
             ),
             "fields": [
+                ("language", "開発言語", "例: Python 3.11", True, [
+                    "Python 3.11", "Python 3.10", "Python 3.9",
+                    "R", "Julia", "Scala",
+                ]),
+                ("framework", "フレームワーク", "例: PyTorch / scikit-learn", False, [
+                    "PyTorch",
+                    "TensorFlow / Keras",
+                    "scikit-learn",
+                    "HuggingFace Transformers",
+                    "LangChain / LlamaIndex",
+                    "XGBoost / LightGBM",
+                    "JAX",
+                    "未定（提案してほしい）",
+                ]),
+                ("baseline", "既存モデル・ベースライン", "例: ロジスティック回帰F1=0.72", False, [
+                    "なし（初回実装）",
+                    "既存モデルあり（改善したい）",
+                    "論文ベースの実装",
+                    "他のフレームワークからの移植",
+                ]),
                 ("task_type", "タスク種別", "例: 二値分類 / 物体検出 / テキスト生成", False, [
                     "二値分類",
                     "多クラス分類",
@@ -1130,6 +1210,26 @@ TEMPLATES = {
                 "You stay current with the latest methods while critically evaluating their real-world effectiveness."
             ),
             "fields": [
+                ("language", "Programming language", "e.g. Python 3.11", True, [
+                    "Python 3.11", "Python 3.10", "Python 3.9",
+                    "R", "Julia", "Scala",
+                ]),
+                ("framework", "Framework", "e.g. PyTorch / scikit-learn", False, [
+                    "PyTorch",
+                    "TensorFlow / Keras",
+                    "scikit-learn",
+                    "HuggingFace Transformers",
+                    "LangChain / LlamaIndex",
+                    "XGBoost / LightGBM",
+                    "JAX",
+                    "Not decided (suggest one)",
+                ]),
+                ("baseline", "Existing model / baseline", "e.g. Logistic regression F1=0.72", False, [
+                    "None (first implementation)",
+                    "Existing model (want to improve)",
+                    "Paper-based implementation",
+                    "Porting from another framework",
+                ]),
                 ("task_type", "Task type", "e.g. Binary classification / Object detection / Text generation", False, [
                     "Binary classification",
                     "Multi-class classification",
@@ -1484,10 +1584,32 @@ def build_prompt(
 
         fmt_map = mode_requests.get(lang, mode_requests["ja"])
         request_text = None
+
+        # まずlangのキーでマッチ試行、次にja/enのキーでも試みる（UI言語とlang設定が異なる場合の対応）
         for key, text in fmt_map.items():
             if key in mode_val:
                 request_text = text
                 break
+
+        # マッチしなかった場合、反対言語のキーで試みる
+        if not request_text:
+            fallback_lang = "ja" if lang == "en" else "en"
+            fallback_map = mode_requests.get(fallback_lang, {})
+            for key, text in fallback_map.items():
+                if key in mode_val:
+                    # fallbackで見つかったキーに対応する、本来のlangのテキストを使用
+                    ja_keys = list(mode_requests["ja"].keys())
+                    en_keys = list(mode_requests["en"].keys())
+                    try:
+                        if fallback_lang == "ja":
+                            idx = ja_keys.index(key)
+                            request_text = mode_requests[lang][en_keys[idx]]
+                        else:
+                            idx = en_keys.index(key)
+                            request_text = mode_requests[lang][ja_keys[idx]]
+                    except (ValueError, KeyError, IndexError):
+                        request_text = text
+                    break
 
         if request_text:
             input_lines.append(request_text)
@@ -1526,9 +1648,33 @@ def build_prompt(
                 "ja": "回答は「実装コード → 使用例 → テストコード（pytest形式）→ 注意点・改善案」の順で出力してください。",
                 "en": "Output in this order: Implementation code → Usage example → Test code (pytest style) → Notes & improvements.",
             },
+            "app_dev": {
+                "ja": "回答は「要件の整理・確認事項 → 設計方針・技術選定の理由 → 実装コード（主要部分）→ セキュリティ上の注意点 → 改善案」の順で出力してください。",
+                "en": "Structure your response as: Requirements & clarifications → Design approach & tech rationale → Implementation code (key parts) → Security considerations → Improvement suggestions.",
+            },
+            "ai_ml": {
+                "ja": "回答は「問題の分析・仮説 → 提案手法と選定理由 → 実装コード → データリーク・過学習リスクの注意点 → 評価方法・次のステップ」の順で出力してください。",
+                "en": "Structure your response as: Problem analysis & hypothesis → Proposed approach with rationale → Implementation code → Data leakage & overfitting risks → Evaluation method & next steps.",
+            },
             "health": {
                 "ja": "レシピを含む場合は「材料（分量付き）→ カロリー概算 → 手順（所要時間付き）→ 栄養バランスのポイント → アレンジ案2つ」の形式で出力してください。",
                 "en": "If a recipe is included, use this structure: Ingredients (with quantities) → Estimated calories → Steps (with time) → Nutrition highlights → 2 variation ideas.",
+            },
+            "study": {
+                "ja": "回答は「直感的な説明 → 具体例 → 正式な定義・数式 → よくある誤解 → 理解確認の小問（2問）→ 次に学ぶべきトピック」の順で出力してください。",
+                "en": "Structure your response as: Intuitive explanation → Concrete example → Formal definition & formulas → Common misconceptions → Quick check questions (x2) → What to study next.",
+            },
+            "language": {
+                "ja": "回答は「今日のテーマ → 重要表現・単語（例文付き）→ 練習問題 → よくある間違いと注意点 → 次のステップ」の順で出力してください。",
+                "en": "Structure your response as: Today's theme → Key expressions & vocabulary (with examples) → Practice exercises → Common mistakes & tips → Next steps.",
+            },
+            "chat": {
+                "ja": "会話形式で返答してください。練習目的の場合は返答の最後に【フィードバック】セクションを追加し、改善点や良かった点を簡潔に伝えてください。",
+                "en": "Respond in dialogue format. For practice purposes, add a [Feedback] section at the end with brief notes on what was good and what could be improved.",
+            },
+            "other": {
+                "ja": "回答の冒頭で、あなたが設定した役割（専門家像）を1行で宣言してから回答を始めてください。",
+                "en": "Start your response with a one-line declaration of the expert role you have set for yourself, then proceed with your answer.",
             },
         }
         hint = output_hints.get(category_key, {}).get(lang)
