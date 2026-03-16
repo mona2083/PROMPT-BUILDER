@@ -1591,14 +1591,22 @@ async function loadProfileData() {
   updateProfileBadge();
 }
 
+function getProfileVal(v) {
+  // {label, value} 形式と文字列の両方に対応
+  if (v && typeof v === "object" && "value" in v) return v.value || "";
+  return v || "";
+}
+
 function updateProfileBadge() {
   const badge = document.getElementById("profile-badge");
   const text = document.getElementById("profile-badge-text");
-  // common グループの入力済み項目を表示
   const common = (currentProfile && currentProfile.common) ? currentProfile.common : {};
-  const filled = Object.entries(common).filter(([k,v]) => v && v.trim());
+  const filled = Object.entries(common).filter(([k,v]) => {
+    const val = getProfileVal(v);
+    return val && val.trim();
+  });
   if (filled.length > 0) {
-    const preview = filled.slice(0, 2).map(([k,v]) => v).join(" / ");
+    const preview = filled.slice(0, 2).map(([k,v]) => getProfileVal(v)).join(" / ");
     const badgePrefix = lang === "ja" ? "プロフィール設定済み: " : "Profile set: ";
     text.textContent = badgePrefix + preview + (filled.length > 2 ? " ..." : "");
     badge.style.display = "flex";
@@ -1626,7 +1634,14 @@ function saveCurrentTabInputs() {
     const k = inp.dataset.key;
     if (g && k) {
       if (!currentProfile[g]) currentProfile[g] = {};
-      currentProfile[g][k] = inp.value;
+      if (k.startsWith("custom_")) {
+        const row = inp.closest(".profile-field-row");
+        const labelEl = row ? row.querySelector(".profile-field-label") : null;
+        const label = labelEl ? labelEl.textContent.trim() : k;
+        currentProfile[g][k] = { label: label, value: inp.value };
+      } else {
+        currentProfile[g][k] = inp.value;
+      }
     }
   });
 }
@@ -1659,6 +1674,11 @@ function renderProfileFields(group) {
   area.innerHTML = "";
   const fields = profileFields[group] || [];
   const groupData = (currentProfile[group]) || {};
+  // {label, value} 形式のカスタム値を展開して表示用に変換
+  const flatGroupData = {};
+  Object.entries(groupData).forEach(([k, v]) => {
+    flatGroupData[k] = getProfileVal(v);
+  });
   const customKeys = (currentProfile._custom_fields || {})[group] || [];
   const defaultKeys = fields.filter(f => !customKeys.find(c => c.key === f[0])).map(f => f[0]);
 
@@ -1678,7 +1698,7 @@ function renderProfileFields(group) {
     inp.type = "text";
     inp.dataset.key = key;
     inp.dataset.group = group;
-    inp.value = groupData[key] || "";
+    inp.value = flatGroupData[key] || "";
     const labelText = (label && typeof label === "object") ? (label[lang] || label["ja"] || key) : label;
     const phText = (placeholder && typeof placeholder === "object") ? (placeholder[lang] || placeholder["ja"] || "") : (placeholder || "");
     inp.placeholder = phText || labelText;
@@ -1714,12 +1734,27 @@ async function addCustomField() {
     body: JSON.stringify({ group: currentProfileGroup, key, label })
   });
   labelInput.value = "";
-  // サーバーからフィールド定義だけ更新、入力値はcurrentProfileから復元
+  // 入力値を退避
+  const savedInputs = {};
+  document.querySelectorAll(".profile-field-input").forEach(inp => {
+    if (inp.dataset.group && inp.dataset.key) {
+      savedInputs[inp.dataset.group + "." + inp.dataset.key] = inp.value;
+    }
+  });
+  // サーバーから全データを再取得
   const res = await fetch("/api/profile");
   const data = await res.json();
   profileFields = data.fields;
   profileGroupLabels = data.group_labels || {};
-  profileGroupKeys = data.group_keys || ["common","tech","life","study"];
+  profileGroupKeys = data.group_keys || ["common","tech","life","recipe","study"];
+  // _custom_fields を完全に上書き同期
+  currentProfile._custom_fields = data.profile._custom_fields || {};
+  // 退避した入力値を復元
+  Object.entries(savedInputs).forEach(([gk, val]) => {
+    const [g, k] = gk.split(".");
+    if (!currentProfile[g]) currentProfile[g] = {};
+    if (val) currentProfile[g][k] = val;
+  });
   renderProfileGroupTabs();
   renderProfileFields(currentProfileGroup);
   setStatus("フィールドを追加しました");
@@ -1731,7 +1766,12 @@ async function deleteCustomField(group, key) {
     method: "DELETE", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ group, key })
   });
-  await loadProfileData();
+  const delRes = await fetch("/api/profile");
+  const delData = await delRes.json();
+  profileFields = delData.fields;
+  if (delData.profile && delData.profile._custom_fields) {
+    currentProfile._custom_fields = delData.profile._custom_fields;
+  }
   renderProfileGroupTabs();
   renderProfileFields(currentProfileGroup);
   setStatus("フィールドを削除しました");
@@ -1746,7 +1786,15 @@ async function saveProfile() {
     const k = inp.dataset.key;
     if (g && k) {
       if (!profile[g]) profile[g] = {};
-      profile[g][k] = inp.value.trim();
+      if (k.startsWith("custom_")) {
+        // カスタムフィールドはラベルと値を一体化して保存
+        const row = inp.closest(".profile-field-row");
+        const labelEl = row ? row.querySelector(".profile-field-label") : null;
+        const label = labelEl ? labelEl.textContent.trim() : k;
+        profile[g][k] = { label: label, value: inp.value.trim() };
+      } else {
+        profile[g][k] = inp.value.trim();
+      }
     }
   });
   await fetch("/api/save_profile", {

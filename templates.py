@@ -74,8 +74,12 @@ TEMPLATES = {
     "ai_pm": {
         "ja": {
             "role": (
-                "あなたはAI開発プロジェクトの経験豊富なシニアプロジェクトマネージャーです。"
-                "リスク管理・意思決定・ステークホルダーマネジメントを得意としています。"
+                "あなたはGoogleをはじめとする大手テック企業でAIプロダクトを10本以上リリースしてきた"
+                "シニアプロダクトマネージャーです。"
+                "失敗プロジェクトの経験も多く、リスクの早期察知と問題の構造化が強みです。"
+                "技術者と経営層の橋渡しを得意とし、常にビジネスインパクトから逆算して判断します。"
+                "AIプロジェクト特有のリスク（データ品質・モデルドリフト・説明責任・倫理）に精通しており、"
+                "曖昧な状況でも意思決定を前進させることを最重視します。"
             ),
             "fields": [
                 ("phase", "フェーズ", "例: 評価フェーズ完了後", False, [
@@ -99,22 +103,23 @@ TEMPLATES = {
                     "リスク一覧（発生確率・影響度・対策）", "ロードマップ（マイルストーン付き）",
                     "ステータスレポート形式", "ポストモーテム形式", "RACI表",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "リスクは「技術・組織・倫理・ビジネス」の4軸で評価してください。",
                 "意思決定は選択肢A/B/Cの形式で、各メリット・デメリット・推奨条件を含めてください。",
                 "AIプロジェクト固有のリスク（モデルドリフト・データ品質・説明責任）も考慮してください。",
             ],
-            "output_format": (
-                "以下の形式で出力してください：\n"
-                "## 状況整理\n## 選択肢（A/B/C）\n## 推奨案と理由\n## 注意点・リスク"
-            ),
+            "output_format": "",
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
             "role": (
-                "You are a senior project manager with extensive experience in AI development projects. "
-                "You specialize in risk management, decision-making, and stakeholder management."
+                "You are a Senior Product Manager who has shipped 10+ AI products at Google and other top tech companies. "
+                "You have experienced both successes and costly failures, making you sharp at early risk detection and problem structuring. "
+                "You excel at bridging engineers and executives, always reasoning backwards from business impact. "
+                "You are deeply familiar with AI-specific risks: data quality, model drift, explainability, and ethics. "
+                "Your defining trait: you move decisions forward even in ambiguous situations."
             ),
             "fields": [
                 ("phase", "Phase", "e.g. Post-evaluation, pre-production", False, [
@@ -138,16 +143,14 @@ TEMPLATES = {
                     "Risk register (likelihood/impact/mitigation)", "Roadmap with milestones",
                     "Status report format", "Post-mortem format", "RACI chart",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Evaluate risks across 4 axes: Technical, Organizational, Ethical, Business.",
                 "Present decisions as options A/B/C with pros, cons, and recommended conditions.",
                 "Consider AI-specific risks: model drift, data quality, explainability.",
             ],
-            "output_format": (
-                "Output in this format:\n"
-                "## Situation Summary\n## Options (A/B/C)\n## Recommendation & Rationale\n## Risks & Caveats"
-            ),
+            "output_format": "",
             "lang_instruction": "Please respond in English.",
         },
     },
@@ -156,8 +159,11 @@ TEMPLATES = {
     "code": {
         "ja": {
             "role": (
-                "あなたはMLエンジニアリングの経験豊富なシニアエンジニアです。"
-                "クリーンコード・型安全・再現性を重視したコードを書きます。"
+                "あなたは本番MLシステムを5年以上設計・運用してきたシニアエンジニアです。"
+                "コードレビューで最も指摘するのは『再現性の欠如』と『エラーハンドリングの甘さ』です。"
+                "美しいコードより壊れにくいコードを優先し、型安全・テスタビリティ・可読性の順で品質を評価します。"
+                "後輩の書いたコードから本質的な問題を見抜き、なぜそうすべきかを丁寧に説明することを得意とします。"
+                "頼まれていないコードは書きません。まず問題を理解してから実装を提案します。"
             ),
             "fields": [
                 ("env", "実行環境", "例: macOS / Python 3.11 / torch==2.3", False, [
@@ -195,6 +201,7 @@ TEMPLATES = {
                     "コードレビュー＋改善案",
                     "リファクタリング済みコード",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "型ヒント（Type hints）を全関数に付けてください。",
@@ -202,17 +209,16 @@ TEMPLATES = {
                 "乱数シード・device自動判定（cuda/mps/cpu）を必ず含めてください。",
                 "コメントは「なぜそうしているか（Why）」に限定してください。",
             ],
-            "output_format": (
-                "以下の順で出力してください：\n"
-                "1. 実装コード（コードブロック）\n2. 使用例\n"
-                "3. テストコード（pytest形式）\n4. 注意点・改善案"
-            ),
+            "output_format": "",
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
             "role": (
-                "You are a senior ML engineer with deep expertise in production-ready AI systems. "
-                "You prioritize clean code, type safety, and reproducibility."
+                "You are a Senior ML Engineer who has designed and operated production ML systems for 5+ years. "
+                "The two things you flag most in code reviews: lack of reproducibility and weak error handling. "
+                "You prioritize resilient code over beautiful code, and evaluate quality in this order: type safety, testability, readability. "
+                "You are skilled at identifying root problems in others' code and explaining the 'why' behind every suggestion. "
+                "You never write code that wasn't asked for. You understand the problem first, then propose an implementation."
             ),
             "fields": [
                 ("env", "Environment", "e.g. macOS / Python 3.11 / MPS", False, [
@@ -250,6 +256,7 @@ TEMPLATES = {
                     "Code review + improvements",
                     "Refactored code",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Add type hints to all functions.",
@@ -257,11 +264,7 @@ TEMPLATES = {
                 "Always include random seed fixing and device auto-detection (cuda/mps/cpu).",
                 "Limit comments to 'Why', not 'What'.",
             ],
-            "output_format": (
-                "Output in this order:\n"
-                "1. Implementation code (code block)\n2. Usage example\n"
-                "3. Test code (pytest style)\n4. Notes & improvements"
-            ),
+            "output_format": "",
             "lang_instruction": "Please respond in English.",
         },
     },
@@ -270,8 +273,11 @@ TEMPLATES = {
     "health": {
         "ja": {
             "role": (
-                "あなたは栄養学と健康管理に精通したアドバイザーです。"
-                "科学的根拠に基づいた、実践しやすい提案を行います。"
+                "あなたは公認スポーツ栄養士とパーソナルトレーナーの両資格を持ち、"
+                "500人以上のクライアントを指導してきた実績のある健康コーチです。"
+                "流行のダイエット法やサプリメントには懐疑的で、継続できる習慣の設計を最重視します。"
+                "科学的根拠のない情報は明確に否定し、個人差・年齢・生活環境を必ず考慮します。"
+                "医師や専門家への相談が必要な場面は迷わず伝えます。"
             ),
             "fields": [
                 ("profile", "プロフィール", "例: 30代男性・在宅勤務", False, [
@@ -303,6 +309,7 @@ TEMPLATES = {
                     "運動メニュー提案",
                     "習慣改善のステップ",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "提案には科学的・栄養学的根拠（1〜2文）を必ず含めてください。",
@@ -310,17 +317,16 @@ TEMPLATES = {
                 "過度にやりすぎた場合のリスクも添えてください。",
                 "医師や栄養士への相談が必要な点があれば明示してください。",
             ],
-            "output_format": (
-                "レシピの場合は以下の形式で出力してください：\n"
-                "【材料】（人数分）\n【カロリー概算】\n【手順】（所要時間付き）\n"
-                "【栄養バランスのポイント】\n【アレンジ提案】2パターン\n【保存期間】"
-            ),
+            "output_format": "",
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
             "role": (
-                "You are a health and nutrition advisor with expertise in evidence-based wellness. "
-                "You provide practical, science-backed recommendations."
+                "You are a Certified Sports Nutritionist and Personal Trainer with 500+ clients coached over 15 years. "
+                "You are skeptical of diet trends and supplements without solid evidence. "
+                "Your priority is designing habits that people can actually sustain, not quick fixes. "
+                "You always factor in individual differences, age, and lifestyle. "
+                "You call out misinformation directly and never hesitate to recommend professional consultation when needed."
             ),
             "fields": [
                 ("profile", "Profile", "e.g. Male, 30s, remote work", False, [
@@ -347,6 +353,7 @@ TEMPLATES = {
                     "1-week meal plan", "Recommended ingredients list",
                     "3 bullet-point tips", "Exercise plan", "Habit improvement steps",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Include scientific/nutritional rationale (1-2 sentences) for each recommendation.",
@@ -354,11 +361,7 @@ TEMPLATES = {
                 "Mention risks of overdoing it.",
                 "Flag any points that require consultation with a doctor or dietitian.",
             ],
-            "output_format": (
-                "For recipes, use this format:\n"
-                "[Ingredients] (servings)\n[Estimated calories]\n[Steps] (with time per step)\n"
-                "[Nutrition highlights]\n[2 variation ideas]\n[Storage duration]"
-            ),
+            "output_format": "",
             "lang_instruction": "Please respond in English.",
         },
     },
@@ -367,8 +370,11 @@ TEMPLATES = {
     "study": {
         "ja": {
             "role": (
-                "あなたは大学生の学習をサポートする経験豊富な家庭教師です。"
-                "理解を深めることを最優先に、ソクラテス式の対話で丁寧に教えます。"
+                "あなたは理工系と社会科学系の両分野で博士号を持ち、"
+                "大学での10年以上の教育経験と1,000人を超える学生指導の実績があるアカデミックコーチです。"
+                "学習者が『わかった気』になることを最も危険視します。"
+                "表面的な理解と本質的な理解を即座に見分け、本当に腑に落ちるまで角度を変えて説明します。"
+                "答えを与えるより、学習者自身が答えに辿り着けるよう問いかけることを優先します。"
             ),
             "fields": [
                 ("subject", "科目・分野", "例: 統計学（大学2年）", False, [
@@ -406,6 +412,7 @@ TEMPLATES = {
                     "試験対策サマリー",
                     "レポートのフィードバック",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "まず直感的な説明を行い、その後数式・定義に進んでください。",
@@ -414,16 +421,19 @@ TEMPLATES = {
                 "答えを直接教えるのではなく、理解を確認しながら進めてください。",
             ],
             "output_format": (
-                "以下の形式で出力してください：\n"
-                "## 直感的な説明\n## 具体例\n## 正式な定義・数式\n"
-                "## よくある誤解\n## 理解確認の小問（2問）\n## 次に学ぶべきトピック"
+                "以下のセクション順で回答してください（マークダウン見出し不要）：\n"
+                "直感的な説明 → 具体例 → 正式な定義・数式 → よくある誤解 → 理解確認の小問（2問） → 次に学ぶべきトピック"
             ),
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
             "role": (
-                "You are an experienced tutor supporting university students. "
-                "You prioritize deep understanding using the Socratic method and concrete examples."
+                "You are an academic coach with a PhD in both engineering and social sciences, "
+                "with 10+ years of university teaching and 1,000+ students mentored. "
+                "You are most wary of students who 'feel' like they understand but don't. "
+                "You instantly spot the difference between surface-level and genuine understanding, "
+                "and you change angles repeatedly until the concept truly clicks. "
+                "You prioritize guiding students to find answers themselves over simply providing them."
             ),
             "fields": [
                 ("subject", "Subject", "e.g. Statistics (2nd year)", False, [
@@ -461,6 +471,7 @@ TEMPLATES = {
                     "Exam prep summary",
                     "Report feedback",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Start with intuitive explanation, then move to formal definition.",
@@ -469,9 +480,8 @@ TEMPLATES = {
                 "Guide understanding step by step rather than giving direct answers.",
             ],
             "output_format": (
-                "Output in this format:\n"
-                "## Intuitive Explanation\n## Concrete Example\n## Formal Definition\n"
-                "## Common Misconceptions\n## Quick Check Questions (x2)\n## What to Study Next"
+                "Structure your response in this order (no markdown headers):\n"
+                "Intuitive explanation → Concrete example → Formal definition → Common misconceptions → Quick check questions (x2) → What to study next"
             ),
             "lang_instruction": "Please respond in English.",
         },
@@ -481,8 +491,12 @@ TEMPLATES = {
     "language": {
         "ja": {
             "role": (
-                "あなたは経験豊富な語学教師です。"
-                "学習者のレベルと目的に合わせて、実践的で効果的な語学学習をサポートします。"
+                "あなたは7言語を話すポリグロットで、成人の語学学習に特化したコーチです。"
+                "20年間で1,000人以上を指導してきた実績があります。"
+                "文法の暗記より『実際に口から出る』ことを最優先にし、"
+                "間違いを恐れない姿勢を引き出すことを得意とします。"
+                "学習者のレベルに合わせた語彙と例文を使い、自然な表現を身につけさせます。"
+                "試験対策と実用的なコミュニケーション能力の両立を支援します。"
             ),
             "fields": [
                 ("target_lang", "学習言語", "例: 英語", False, [
@@ -535,6 +549,7 @@ TEMPLATES = {
                     "発音ガイド",
                     "模擬試験問題",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "学習者のレベルに合わせた語彙・文法を使ってください。",
@@ -544,16 +559,19 @@ TEMPLATES = {
                 "練習問題や確認テストを含めると効果的です。",
             ],
             "output_format": (
-                "以下の形式で出力してください：\n"
-                "## 今日のテーマ\n## 重要表現・単語（例文付き）\n"
-                "## 練習問題\n## よくある間違いと注意点\n## 次のステップ"
+                "以下のセクション順で回答してください（マークダウン見出し不要）：\n"
+                "今日のテーマ → 重要表現・単語（例文付き） → 練習問題 → よくある間違いと注意点 → 次のステップ"
             ),
             "lang_instruction": "解説は日本語で行い、学習対象言語の例文・表現は元の言語で記載してください。",
         },
         "en": {
             "role": (
-                "You are an experienced language teacher. "
-                "You provide practical and effective language learning support tailored to the learner's level and goals."
+                "You are a polyglot fluent in 7 languages and a specialist coach in adult language acquisition. "
+                "You have coached 1,000+ learners over 20 years. "
+                "Your top priority is getting words to actually come out of the learner's mouth — not memorizing grammar rules. "
+                "You excel at building the fearlessness to make mistakes, which you consider the #1 accelerator. "
+                "You use vocabulary and examples matched precisely to the learner's level, "
+                "and support both exam preparation and real-world communicative competence."
             ),
             "fields": [
                 ("target_lang", "Target language", "e.g. Spanish", False, [
@@ -601,6 +619,7 @@ TEMPLATES = {
                     "Pronunciation guide",
                     "Practice test questions",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Use vocabulary and grammar appropriate to the learner's level.",
@@ -610,9 +629,8 @@ TEMPLATES = {
                 "Add practice exercises or a short quiz when helpful.",
             ],
             "output_format": (
-                "Output in this format:\n"
-                "## Today's theme\n## Key expressions & vocabulary (with examples)\n"
-                "## Practice exercises\n## Common mistakes & tips\n## Next steps"
+                "Structure your response in this order (no markdown headers):\n"
+                "Today's theme → Key expressions & vocabulary (with examples) → Practice exercises → Common mistakes & tips → Next steps"
             ),
             "lang_instruction": "Provide explanations in English. Write target language examples in the target language.",
         },
@@ -622,8 +640,12 @@ TEMPLATES = {
     "chat": {
         "ja": {
             "role": (
-                "あなたは以下に定義されたペルソナとして会話します。"
-                "設定に忠実に、自然でリアルな会話を行ってください。"
+                "あなたは指定されたペルソナとして会話します。"
+                "単なるロールプレイではなく、そのキャラクターが実際に持つであろう"
+                "知識・語彙・思考パターン・感情的反応を再現してください。"
+                "設定と矛盾する発言は絶対にしません。"
+                "会話の流れを自然に保ちながら、相手が話しやすい雰囲気を作ることを優先します。"
+                "語学練習モードの場合は、不自然な表現をさりげなく修正します。"
             ),
             "fields": [
                 ("persona", "ペルソナ（誰として話すか）", "例: 親しい友人 / 厳しい上司", False, [
@@ -683,6 +705,7 @@ TEMPLATES = {
                     "返答後に語彙・文法の補足をする",
                     "会話後にまとめ・評価を出す",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [
                 "定義されたペルソナと性格に終始一貫して従ってください。",
@@ -699,8 +722,11 @@ TEMPLATES = {
         },
         "en": {
             "role": (
-                "You are roleplaying as the persona defined below. "
-                "Stay true to the character and engage in natural, realistic conversation."
+                "You embody the assigned persona — not just playing a role, but reproducing "
+                "the actual knowledge, vocabulary, thought patterns, and emotional responses that character would have. "
+                "You never contradict the assigned persona's settings. "
+                "You prioritize keeping the conversation natural and making the other person feel at ease. "
+                "In language practice mode, you subtly correct unnatural expressions without breaking the flow."
             ),
             "fields": [
                 ("persona", "Persona (who you are)", "e.g. Close friend / Strict boss", False, [
@@ -760,6 +786,7 @@ TEMPLATES = {
                     "Reply + vocabulary/grammar notes",
                     "Conversation summary & evaluation",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [
                 "Stay consistently in character throughout the entire conversation.",
@@ -776,201 +803,88 @@ TEMPLATES = {
         },
     },
 
-    # ── Recipe / レシピ ────────────────────────────────────────────
+    # ── Recipe / レシピ（料理コーチ特化）─────────────────────────────
     "recipe": {
         "ja": {
             "role": (
-                "あなたはプロの料理家兼栄養士です。"
-                "ユーザーの食材・好み・状況に合わせて、実践的で美味しいレシピを提案します。"
-                "家庭で再現しやすい手順と、プロのコツを織り交ぜた提案が得意です。"
+                "あなたは30年以上の現場経験を持つプロシェフ兼料理研究家です。"
+                "フランス料理・日本料理・アジア料理に精通し、家庭料理から本格料理まで幅広く対応できます。"
+                "栄養学の知識も深く、食材の組み合わせ・調理科学・保存方法に詳しいです。"
+                "ユーザーのプロフィール（常備食材・調味料・調理器具・食の好み・生活環境・アレルギー）を完全に把握し、"
+                "その人の状況に完全に最適化されたアドバイスを提供します。"
+                "単なるレシピ提案ではなく、料理の腕を上げるためのコーチとして行動してください。"
             ),
             "fields": [
-                ("request_type", "知りたいこと", "例: 材料からレシピ提案", False, [
-                    "食材からレシピを提案してほしい",
-                    "作りたい料理のレシピを教えてほしい",
-                    "今ある食材で何が作れるか提案してほしい",
-                    "ヘルシーなアレンジレシピを教えてほしい",
-                    "簡単・時短レシピを教えてほしい",
-                    "本格的なレシピを教えてほしい",
-                    "余り物を使ったレシピを教えてほしい",
-                    "特定の栄養素を意識したレシピを教えてほしい",
+                ("mode", "モード選択", "何をしたいか選んでください", True, [
+                    "🥗 使い切り：今ある食材でメニュー提案",
+                    "💰 予算管理：週の献立＋買い物リスト作成",
+                    "📚 スキルアップ：料理のコツ・理由を深く学ぶ",
+                    "💡 アイデア：気分・条件から自由提案",
+                    "🥣 作り置きプラン：まとめて作り週の食事を楽に",
+                    "🏥 体調サポート：今日の体調・目標に合わせたメニュー",
                 ]),
-                ("dish_category", "料理のカテゴリ", "例: 和食・パスタ・スープ", False, [
-                    "和食（煮物・焼き物・炒め物）",
-                    "洋食（パスタ・グラタン・ソテー）",
-                    "中華（炒め物・蒸し料理）",
-                    "アジア料理（タイ・韓国・インドなど）",
-                    "スープ・鍋料理",
-                    "サラダ・副菜",
-                    "お弁当おかず",
-                    "スイーツ・お菓子",
-                    "パン・ピザ",
-                    "おつまみ・前菜",
-                    "朝食・ブランチ",
-                    "丼・ご飯もの",
+                ("main_input", "メインの入力", "例: 今ある食材 / 今週の予算 / 学びたい料理 / 気分", True, []),
+                ("servings", "何人分？", "例: 1人分", False, [
+                    "1人分（自分だけ）",
+                    "2人分",
+                    "3〜4人分",
+                    "作り置き（4〜6人分）",
                 ]),
-                ("dish_name", "作りたい料理名", "例: カルボナーラ・肉じゃが（自由入力）", False, []),
-                ("ingredients", "使いたい・使える材料", "例: 鶏もも肉・玉ねぎ・じゃがいも", False, []),
-                ("servings", "何人分？", "例: 2人分", False, [
-                    "1人分", "2人分", "3〜4人分", "4〜6人分（作り置き）",
+                ("condition", "今日の気分・体調・制約", "例: 疲れている・ダイエット中・30分以内", False, [
+                    "時短（30分以内）",
+                    "疲れているので簡単なもの",
+                    "しっかり食べたい・体力回復",
+                    "ダイエット中・カロリー控えめ",
+                    "筋トレ後・タンパク質多め",
+                    "胃腸が弱っている・消化に良いもの",
+                    "特になし",
                 ]),
-                ("preferences", "食の好み・好きなもの", "例: 濃いめの味付け・スパイシー好き", False, [
-                    "あっさり・薄味", "濃いめ・しっかり味",
-                    "甘辛", "スパイシー・辛め",
-                    "さっぱり・柑橘系", "クリーミー・まろやか",
-                    "和風だし風味", "洋風ハーブ系",
-                ]),
-                ("dislikes", "苦手なもの・嫌いなもの", "例: パクチー・レバー", False, [
-                    "パクチー（香菜）", "レバー・内臓系",
-                    "生魚・刺身", "辛いもの全般",
-                    "苦い野菜（ゴーヤ・ピーマンなど）",
-                    "なし（特になし）",
-                ]),
-                ("allergies", "アレルギー・食事制限", "例: 乳製品・グルテンフリー", False, [
-                    "なし", "卵アレルギー", "乳製品アレルギー",
-                    "小麦（グルテンフリー）", "甲殻類アレルギー",
-                    "ナッツアレルギー", "大豆アレルギー",
-                    "ベジタリアン", "ヴィーガン", "ハラール",
-                ]),
-                ("tools", "使えるキッチンツール", "例: 電子レンジのみ・フライパン・オーブン", False, [
-                    "フライパン・鍋のみ",
-                    "電子レンジのみ",
-                    "オーブン・トースター使用可",
-                    "炊飯器使用可",
-                    "圧力鍋使用可",
-                    "ミキサー・フードプロセッサー使用可",
-                    "一般的な調理器具全て使用可",
-                ]),
-                ("time", "調理時間の目安", "例: 30分以内", False, [
-                    "15分以内（超時短）",
-                    "30分以内",
-                    "1時間以内",
-                    "時間をかけてOK（2時間以上も可）",
-                    "前日仕込みOK",
-                ]),
-                ("output_expectation", "期待する出力", "例: レシピ1つ・詳しい手順付き", False, [
-                    "レシピ1つ（材料・手順・コツ付き）",
-                    "レシピ3つ提案（簡単な説明付き）",
-                    "材料からアイデアを3つ提案",
-                    "詳しい手順＋プロのコツ付き",
-                    "カロリー・栄養情報付き",
-                    "アレンジバリエーション付き",
-                    "作り置き・保存方法付き",
-                ]),
+                ("extra", "その他・補足", "例: 先週カレーを食べたので別のもの、など", False, []),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
-            "rules": [
-                "材料の分量は人数分に合わせて具体的な数値で記載してください。",
-                "手順は番号付きで、1ステップずつ明確に書いてください。",
-                "調理のコツや失敗しやすいポイントを必ず1つ以上含めてください。",
-                "アレルギーや食事制限が指定されている場合は必ず厳守してください。",
-                "嫌いな食材は代替案も提示してください。",
-            ],
-            "output_format": (
-                "以下の形式で出力してください：\n"
-                "## 料理名\n"
-                "### 材料（〇人分）\n"
-                "### 手順\n"
-                "### コツ・ポイント\n"
-                "### カロリー概算\n"
-                "### アレンジ提案（任意）"
-            ),
+            "rules": [],
+            "output_format": "",
             "lang_instruction": "必ず日本語で回答してください。",
         },
         "en": {
             "role": (
-                "You are a professional chef and nutritionist. "
-                "You suggest practical and delicious recipes tailored to the user's ingredients, preferences, and situation. "
-                "You excel at combining easy-to-follow home cooking steps with professional tips."
+                "You are a professional chef and culinary researcher with over 30 years of hands-on experience. "
+                "You are well-versed in French, Japanese, and Asian cuisines, from home cooking to fine dining. "
+                "You have deep knowledge of nutrition, flavor pairing, food science, and preservation. "
+                "You fully understand the user's profile (pantry staples, condiments, kitchen tools, food preferences, living environment, allergies) "
+                "and provide advice completely optimized for their situation. "
+                "Act as a coach to improve their cooking skills, not just suggest recipes."
             ),
             "fields": [
-                ("request_type", "What you want to know", "e.g. Suggest recipes from ingredients", False, [
-                    "Suggest recipes from my ingredients",
-                    "Give me the recipe for a specific dish",
-                    "What can I make with what I have?",
-                    "Suggest a healthy version of a dish",
-                    "Quick & easy recipes only",
-                    "Authentic / elaborate recipe",
-                    "Use up leftovers",
-                    "Recipes focused on specific nutrition",
+                ("mode", "Mode", "What do you want to do?", True, [
+                    "🥗 Use it up: Suggest meals from what I have",
+                    "💰 Budget plan: Weekly meal plan + shopping list",
+                    "📚 Skill up: Learn cooking techniques & why",
+                    "💡 Ideas: Free suggestions based on mood/conditions",
+                    "🥣 Meal prep: Cook in bulk for the week",
+                    "🏥 Health support: Menu based on today's condition/goal",
                 ]),
-                ("dish_category", "Dish category", "e.g. Pasta, Soup, Stir-fry", False, [
-                    "Japanese cuisine",
-                    "Western / European",
-                    "Italian (pasta, pizza)",
-                    "Chinese (stir-fry, steamed)",
-                    "Asian (Thai, Korean, Indian)",
-                    "Soups & stews",
-                    "Salads & sides",
-                    "Lunchbox / meal prep",
-                    "Desserts & baking",
-                    "Breakfast & brunch",
-                    "Rice bowls & grains",
-                    "Snacks & appetizers",
+                ("main_input", "Main input", "e.g. Ingredients on hand / Weekly budget / Dish to learn / Mood", True, []),
+                ("servings", "Servings", "e.g. 1 serving", False, [
+                    "1 serving (just me)",
+                    "2 servings",
+                    "3-4 servings",
+                    "Meal prep (4-6 servings)",
                 ]),
-                ("dish_name", "Dish name (if specific)", "e.g. Carbonara, Beef stew (free input)", False, []),
-                ("ingredients", "Ingredients to use", "e.g. chicken thigh, onion, potato", False, []),
-                ("servings", "Servings", "e.g. 2 servings", False, [
-                    "1 serving", "2 servings", "3-4 servings", "4-6 servings (meal prep)",
+                ("condition", "Today's mood / condition / constraints", "e.g. Tired, dieting, under 30 min", False, [
+                    "Quick (under 30 min)",
+                    "Tired — keep it simple",
+                    "Want something hearty / energy boost",
+                    "Dieting / low calorie",
+                    "Post-workout / high protein",
+                    "Upset stomach / easy to digest",
+                    "No constraints",
                 ]),
-                ("preferences", "Food preferences / likes", "e.g. Rich flavor, spicy", False, [
-                    "Light & mild", "Rich & savory",
-                    "Sweet & savory", "Spicy",
-                    "Refreshing / citrusy", "Creamy & mellow",
-                    "Umami-forward", "Herby & aromatic",
-                ]),
-                ("dislikes", "Dislikes / foods to avoid", "e.g. Cilantro, liver", False, [
-                    "Cilantro (coriander)", "Liver / organ meats",
-                    "Raw fish", "Spicy food",
-                    "Bitter vegetables", "None",
-                ]),
-                ("allergies", "Allergies / dietary restrictions", "e.g. Dairy-free, gluten-free", False, [
-                    "None", "Egg allergy", "Dairy-free",
-                    "Gluten-free", "Shellfish allergy",
-                    "Nut allergy", "Soy allergy",
-                    "Vegetarian", "Vegan", "Halal",
-                ]),
-                ("tools", "Available kitchen tools", "e.g. Microwave only, frying pan, oven", False, [
-                    "Frying pan & pot only",
-                    "Microwave only",
-                    "Oven / toaster oven available",
-                    "Rice cooker available",
-                    "Pressure cooker available",
-                    "Blender / food processor available",
-                    "Full kitchen equipment",
-                ]),
-                ("time", "Cooking time available", "e.g. Under 30 minutes", False, [
-                    "Under 15 minutes (super quick)",
-                    "Under 30 minutes",
-                    "Under 1 hour",
-                    "Happy to spend 2+ hours",
-                    "Overnight / advance prep OK",
-                ]),
-                ("output_expectation", "Expected output", "e.g. 1 recipe with detailed steps", False, [
-                    "1 recipe (ingredients, steps, tips)",
-                    "3 recipe suggestions (brief overview)",
-                    "3 ideas from my ingredients",
-                    "Detailed steps + professional tips",
-                    "With calorie & nutrition info",
-                    "With variation ideas",
-                    "With storage & meal prep tips",
-                ]),
+                ("extra", "Additional notes", "e.g. Had curry last week, want something different", False, []),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
-            "rules": [
-                "Provide specific quantities for ingredients based on the number of servings.",
-                "Write steps in numbered format, one clear action per step.",
-                "Always include at least one cooking tip or common mistake to avoid.",
-                "Strictly follow any allergy or dietary restrictions.",
-                "Suggest substitutes for any disliked ingredients.",
-            ],
-            "output_format": (
-                "Output in this format:\n"
-                "## Dish name\n"
-                "### Ingredients (serves X)\n"
-                "### Instructions\n"
-                "### Tips & tricks\n"
-                "### Estimated calories\n"
-                "### Variations (optional)"
-            ),
+            "rules": [],
+            "output_format": "",
             "lang_instruction": "Please respond in English.",
         },
     },
@@ -979,8 +893,11 @@ TEMPLATES = {
     "other": {
         "ja": {
             "role": (
-                "あなたは幅広い知識を持つ優秀なアシスタントです。"
-                "ユーザーの目的に応じて最適な回答を提供します。"
+                "あなたはこの質問・依頼の内容を読み、最もふさわしい専門家像を自ら設定してください。"
+                "例えば、法律の質問なら「15年のキャリアを持つ弁護士」、"
+                "ビジネスの質問なら「複数のスタートアップを経営した起業家」のように。"
+                "スキル・経験・スタンスの3点を自ら定義し、その立場から一貫して回答してください。"
+                "回答の冒頭で自分が設定した役割を1行で宣言してから始めてください。"
             ),
             "fields": [
                 ("goal", "目的・ゴール", "例: このタスクで達成したいこと", False, [
@@ -1001,6 +918,7 @@ TEMPLATES = {
                     "メール形式", "レポート形式", "FAQ形式",
                     "ステップバイステップ",
                 ]),
+                ("notes", "備考・追記", "その他、AIへの補足や特記事項があれば", False, []),
             ],
             "rules": [],
             "output_format": (
@@ -1011,8 +929,11 @@ TEMPLATES = {
         },
         "en": {
             "role": (
-                "You are a highly capable assistant with broad knowledge. "
-                "You provide optimal responses tailored to the user's needs."
+                "Read this question/request and define the most fitting expert persona yourself. "
+                "For example: for a legal question, 'a lawyer with 15 years of practice'; "
+                "for a business question, 'an entrepreneur who has founded multiple startups'. "
+                "Define your own skills, experience, and stance across 3 dimensions, then respond consistently from that perspective. "
+                "Start your response by declaring in one line the role you have set for yourself."
             ),
             "fields": [
                 ("goal", "Goal", "e.g. What you want to achieve", False, [
@@ -1034,6 +955,7 @@ TEMPLATES = {
                     "Formal prose", "Casual prose", "Email format",
                     "Report format", "FAQ format", "Step-by-step",
                 ]),
+                ("notes", "Additional notes", "Any other context or special instructions for the AI", False, []),
             ],
             "rules": [],
             "output_format": (
@@ -1097,28 +1019,41 @@ def build_prompt(
             parts.extend(profile_lines)
             parts.append("")
 
-    # 3. 役割定義（スキル・経験・スタンスの3点セット）
-    if lang == "ja":
-        role_base = (
-            "【役割】\n"
-            "以下の3点を踏まえた専門家・アシスタントとして回答してください。\n"
-            "- スキル: この質問・依頼に最も関連する専門領域・得意分野を自ら設定する\n"
-            "- 経験: 実務・研究・現場での豊富な経験を持つ専門家として\n"
-            "- スタンス: 正確さと実用性を重視し、不確かな情報は必ず明示する\n"
-        )
-        if role_perspectives and role_perspectives.strip():
-            role_base += f"- 視点: {role_perspectives.strip()} の立場から回答する\n"
-    else:
-        role_base = (
-            "【Role】\n"
-            "Respond as an expert/assistant based on the following 3 points:\n"
-            "- Skills: Set the most relevant expertise and specialty for this request\n"
-            "- Experience: As a practitioner with substantial real-world experience\n"
-            "- Stance: Prioritize accuracy and practicality; always flag uncertain information\n"
-        )
-        if role_perspectives and role_perspectives.strip():
-            role_base += f"- Perspective: Respond from the viewpoint of {role_perspectives.strip()}\n"
+    # 3. 役割定義（カテゴリ固有の役割をベースに、視点を追加）
+    role_label = "【役割】" if lang == "ja" else "【Role】"
+    role_base = f"{role_label}\n{tmpl['role']}\n"
+
+    # 役割の視点が選択されている場合のみ追加
+    if role_perspectives and role_perspectives.strip():
+        if lang == "ja":
+            role_base += f"\nさらに以下の視点を加えて回答してください。\n- {role_perspectives.strip()}\n"
+        else:
+            role_base += f"\nAdditionally, respond from the following perspective(s):\n- {role_perspectives.strip()}\n"
+
     parts.append(role_base)
+
+    # レシピカテゴリ：絶対的制約を役割の直後に挿入
+    if category_key == "recipe":
+        if lang == "ja":
+            parts.append(
+                "【絶対的制約】\n"
+                "以下は回答の内容に関わらず必ず守ること。\n"
+                "- プロフィールに登録された食材・調味料・調理器具・生活環境・食の好みを全て反映すること\n"
+                "- 苦手な食材・避けたい食材は絶対に使わないこと（使う場合は代替案を必ず提示）\n"
+                "- アレルギーは例外なく厳守すること\n"
+                "- プロフィールの居住地・生活環境を考慮し、入手しやすい食材を優先すること\n"
+                "- 材料の分量は必ず具体的な数値で記載すること\n"
+            )
+        else:
+            parts.append(
+                "【Absolute Constraints】\n"
+                "The following must be observed regardless of the request.\n"
+                "- Reflect all profile data: ingredients, condiments, tools, living environment, and food preferences\n"
+                "- Never use disliked or avoided ingredients (if unavoidable, always offer substitutes)\n"
+                "- Allergy restrictions must be followed without exception\n"
+                "- Prioritize ingredients available in the user's location based on their profile\n"
+                "- Always state ingredient quantities as specific numbers\n"
+            )
 
     # 4. 会話履歴・背景コンテキスト（あれば）
     if context_history and context_history.strip():
@@ -1139,28 +1074,165 @@ def build_prompt(
 
     # 5. 質問・依頼内容（値があるフィールドのみ）
     input_lines = []
-    for field in tmpl["fields"]:
-        field_key = field[0]
-        label = field[1]
-        value = user_inputs.get(field_key, "").strip()
-        if value:
-            if isinstance(label, dict):
-                clean_label = label.get(lang) or label.get("ja") or field_key
-            else:
-                clean_label = label.replace(" *", "")
-            input_lines.append(f"- {clean_label}: {value}")
+
+    # レシピカテゴリは専用の自然言語形式で構築
+    if category_key == "recipe":
+        mode_val    = user_inputs.get("mode", "").strip()
+        main_input  = user_inputs.get("main_input", "").strip()
+        servings    = user_inputs.get("servings", "").strip()
+        condition   = user_inputs.get("condition", "").strip()
+        extra       = user_inputs.get("extra", "").strip()
+        notes       = user_inputs.get("notes", "").strip()
+
+        # モードごとの自然な依頼文
+        mode_requests = {
+            "ja": {
+                "使い切り": (
+                    f"今ある食材（{main_input}）を使い切るメニューを3案提案してください。"
+                    "各案に「料理名 / 調理時間 / 使い切れる食材 / 一言ポイント」を記載し、"
+                    "最もおすすめの1案については材料・分量・手順・プロのコツを含むフルレシピを提示してください。"
+                ),
+                "予算管理": (
+                    f"予算・期間の条件（{main_input}）で献立を作成してください。"
+                    "「曜日 / 料理名 / 概算コスト」の献立表と、"
+                    "週1回の買い物で揃う食材リスト（食材名・量・目安金額）を作成し、"
+                    "食材の使い回しで無駄が出ないよう工夫してください。"
+                    "献立の中から1〜2品、代表的な料理の簡易レシピ（材料・手順）も提示してください。"
+                ),
+                "スキルアップ": (
+                    f"「{main_input}」の作り方を教えてください。"
+                    "まず完全なレシピ（材料・分量・手順）を提示した上で、"
+                    "以下の構成でプロの解説を加えてください。"
+                    "① なぜこの手順・技法なのか（調理科学の観点から）"
+                    "② プロが意識しているコツ（初心者が見落としがちな点）"
+                    "③ よくある失敗とその原因・対処法"
+                    "④ 応用・バリエーションアイデア"
+                ),
+                "アイデア": (
+                    f"条件・気分（{main_input}）に合う料理を3案提案してください。"
+                    "各案に「料理名 / 調理時間 / なぜ今日この料理をおすすめするか / 難易度 / 簡易レシピ（材料・手順）」を記載してください。"
+                    "プロのシェフならではの意外な視点も1案含めてください。"
+                ),
+                "作り置き": (
+                    f"「{main_input}」をベースに週の食事準備を楽にする作り置きプランを作成してください。"
+                    "各料理のフルレシピ（材料・分量・手順）と、"
+                    "「保存方法・容器 / 日持ち / 週の使い回しアイデア（2〜3通り）」をセットで提示してください。"
+                    "1〜2時間の調理で週の大半をカバーできるプランを目指してください。"
+                ),
+                "体調サポート": (
+                    f"今日の体調・目標（{main_input}）を踏まえ、今日食べるべき料理を3案提案してください。"
+                    "各案に「料理名 / 期待できる効果（栄養学的根拠1〜2文）/ 調理時間 / 注意点 / 簡易レシピ（材料・手順）」を記載してください。"
+                ),
+            },
+            "en": {
+                "Use it up": (
+                    f"Suggest 3 recipe ideas to use up these ingredients: {main_input}. "
+                    "For each: dish name / cooking time / ingredients used up / one-line highlight. "
+                    "For the top recommended option, provide a full recipe with ingredients, quantities, steps, and a pro tip."
+                ),
+                "Budget plan": (
+                    f"Create a meal plan given this budget/timeframe: {main_input}. "
+                    "Include a meal table (day / dish name / estimated cost) and a shopping list "
+                    "(ingredient / quantity / price). Plan ingredient reuse to minimize waste. "
+                    "Also provide simple recipes (ingredients & steps) for 1-2 representative dishes."
+                ),
+                "Skill up": (
+                    f"Please give me the full recipe for: {main_input}. "
+                    "First provide the complete recipe (ingredients, quantities, steps), "
+                    "then add a professional breakdown: "
+                    "① Why this method (food science perspective) "
+                    "② Pro tips beginners miss "
+                    "③ Common mistakes, causes, fixes "
+                    "④ Variations and applications."
+                ),
+                "Ideas": (
+                    f"Suggest 3 recipe ideas based on: {main_input}. "
+                    "For each: dish name / cooking time / why it fits today / difficulty / simple recipe (ingredients & steps). "
+                    "Include at least one unexpected chef-inspired suggestion."
+                ),
+                "Meal prep": (
+                    f"Design a meal prep plan around: {main_input}. "
+                    "For each dish, provide a full recipe (ingredients, quantities, steps) plus: "
+                    "storage method & container / shelf life / 2-3 reuse ideas during the week. "
+                    "Target: completable in 1-2 hours, covering most of the week."
+                ),
+                "Health support": (
+                    f"Based on today's condition/goal: {main_input} — "
+                    "suggest 3 recipe options for today. "
+                    "For each: dish name / expected benefits (1-2 sentences of nutritional rationale) / cooking time / cautions / simple recipe (ingredients & steps)."
+                ),
+            },
+        }
+
+        fmt_map = mode_requests.get(lang, mode_requests["ja"])
+        request_text = None
+        for key, text in fmt_map.items():
+            if key in mode_val:
+                request_text = text
+                break
+
+        if request_text:
+            input_lines.append(request_text)
+        elif main_input:
+            input_lines.append(main_input)
+
+        if servings:
+            input_lines.append(f"- {'人数' if lang == 'ja' else 'Servings'}: {servings}")
+        if condition:
+            input_lines.append(f"- {'今日の状態' if lang == 'ja' else 'Today'}: {condition}")
+        if extra:
+            input_lines.append(f"- {'補足' if lang == 'ja' else 'Note'}: {extra}")
+        if notes:
+            input_lines.append(f"- {'備考' if lang == 'ja' else 'Additional'}: {notes}")
+
+    else:
+        # 通常カテゴリ：フィールドラベルと値をそのまま使用
+        for field in tmpl["fields"]:
+            field_key = field[0]
+            label = field[1]
+            value = user_inputs.get(field_key, "").strip()
+            if value:
+                if isinstance(label, dict):
+                    clean_label = label.get(lang) or label.get("ja") or field_key
+                else:
+                    clean_label = label.replace(" *", "")
+                input_lines.append(f"- {clean_label}: {value}")
+
+        # カテゴリ固有の出力構造ヒントを依頼内容に追加
+        output_hints = {
+            "ai_pm": {
+                "ja": "回答は「状況整理 → 選択肢（A/B/C）のメリット・デメリット・推奨条件 → 主なリスク」の順で整理してください。",
+                "en": "Structure your response as: Situation summary → Options (A/B/C) with pros, cons, and recommended conditions → Key risks.",
+            },
+            "code": {
+                "ja": "回答は「実装コード → 使用例 → テストコード（pytest形式）→ 注意点・改善案」の順で出力してください。",
+                "en": "Output in this order: Implementation code → Usage example → Test code (pytest style) → Notes & improvements.",
+            },
+            "health": {
+                "ja": "レシピを含む場合は「材料（分量付き）→ カロリー概算 → 手順（所要時間付き）→ 栄養バランスのポイント → アレンジ案2つ」の形式で出力してください。",
+                "en": "If a recipe is included, use this structure: Ingredients (with quantities) → Estimated calories → Steps (with time) → Nutrition highlights → 2 variation ideas.",
+            },
+        }
+        hint = output_hints.get(category_key, {}).get(lang)
+        if hint:
+            input_lines.append(f"- {hint}")
+
+
     if input_lines:
         parts.append("【質問・依頼内容】" if lang == "ja" else "【Request】")
         parts.extend(input_lines)
 
-    # 6. 出力ルール（カテゴリルール＋出力形式＋言語指示を統合、全て箇条書き）
+    # 6. 出力ルール（制約・品質基準のみ）
     out_label = "【出力ルール】" if lang == "ja" else "【Output Rules】"
     out_lines = [f"- {rule}" for rule in tmpl["rules"]]
-    # output_format が複数行の場合は各行に - を付ける
-    for line in tmpl["output_format"].splitlines():
-        line = line.strip()
-        if line:
-            out_lines.append(f"- {line}" if not line.startswith("-") else line)
+
+    # 通常カテゴリは output_format をそのまま使用（レシピは制約のみなので不要）
+    if category_key != "recipe":
+        for line in tmpl["output_format"].splitlines():
+            line = line.strip()
+            if line:
+                out_lines.append(f"- {line}" if not line.startswith("-") else line)
+
     out_lines.append(f"- {tmpl['lang_instruction']}")
     parts.append(f"\n{out_label}\n" + "\n".join(out_lines))
 

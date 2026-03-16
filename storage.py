@@ -136,7 +136,7 @@ CATEGORY_PROFILE_MAP = {
     "ai_pm":    ["common", "tech"],
     "code":     ["common", "tech"],
     "health":   ["common", "life"],
-    "recipe":   ["common", "life"],
+    "recipe":   ["common", "recipe"],   # ← lifeからrecipeに変更
     "study":    ["common", "study"],
     "language": ["common", "study"],
     "chat":     ["common"],
@@ -163,15 +163,20 @@ PROFILE_GROUP_FIELDS = {
         ("tech_level",   {"ja": "技術レベル",           "en": "Tech Level"},     {"ja": "例: 中級・本番経験あり", "en": "e.g. Intermediate, production exp."}),
     ],
     "life": [
-        ("lifestyle",    {"ja": "生活スタイル",         "en": "Lifestyle"},      {"ja": "例: 在宅勤務・一人暮らし", "en": "e.g. Remote work, living alone"}),
-        ("hobbies",      {"ja": "趣味・好きなこと",     "en": "Hobbies"},        {"ja": "例: 料理・ヨガ・読書", "en": "e.g. Cooking, yoga, reading"}),
-        ("personality",  {"ja": "性格",                 "en": "Personality"},    {"ja": "例: 几帳面・計画的", "en": "e.g. Detail-oriented, organized"}),
-        ("health_notes", {"ja": "気をつけていること",   "en": "Health Notes"},   {"ja": "例: 塩分控えめ・週3運動", "en": "e.g. Low sodium, exercise 3x/week"}),
-        ("food_likes",   {"ja": "食の好み・好きなもの", "en": "Food Likes"},     {"ja": "例: 和食・スパイシー好き", "en": "e.g. Japanese food, spicy"}),
-        ("food_dislikes",{"ja": "嫌いなもの・苦手",     "en": "Food Dislikes"},  {"ja": "例: パクチー・レバー", "en": "e.g. Cilantro, liver"}),
-        ("allergies",    {"ja": "アレルギー・食事制限", "en": "Allergies"},       {"ja": "例: 乳製品アレルギー", "en": "e.g. Dairy allergy"}),
-        ("kitchen_tools",{"ja": "使えるキッチンツール", "en": "Kitchen Tools"},   {"ja": "例: フライパン・電子レンジ", "en": "e.g. Frying pan, microwave"}),
-        ("household",    {"ja": "家族構成・人数",       "en": "Household"},      {"ja": "例: 2人暮らし", "en": "e.g. 2-person household"}),
+        ("lifestyle",    {"ja": "生活スタイル",           "en": "Lifestyle"},       {"ja": "例: 在宅勤務・一人暮らし",    "en": "e.g. Remote work, living alone"}),
+        ("hobbies",      {"ja": "趣味・好きなこと",         "en": "Hobbies"},         {"ja": "例: 料理・ヨガ・読書",        "en": "e.g. Cooking, yoga, reading"}),
+        ("personality",  {"ja": "性格",                   "en": "Personality"},      {"ja": "例: 几帳面・計画的",          "en": "e.g. Detail-oriented, organized"}),
+        ("health_notes", {"ja": "健康目標・気をつけていること", "en": "Health Goals"}, {"ja": "例: 塩分控えめ・週3運動",    "en": "e.g. Low sodium, exercise 3x/week"}),
+        ("household",    {"ja": "家族構成・人数",            "en": "Household"},       {"ja": "例: 1人暮らし",              "en": "e.g. Living alone"}),
+    ],
+    "recipe": [
+        ("living_env",    {"ja": "生活環境・居住地",         "en": "Living Environment"}, {"ja": "例: ハワイ在住・アジア系スーパーあり・Whole Foods近く", "en": "e.g. Hawaii, Asian grocery nearby, Whole Foods close"}),
+        ("food_likes",    {"ja": "好きな料理・食の好み",      "en": "Food Likes"},         {"ja": "例: 日本食・スパイシー好き・あっさり系", "en": "e.g. Japanese food, spicy, light flavors"}),
+        ("food_dislikes", {"ja": "苦手な食材・避けたいもの",  "en": "Food Dislikes"},      {"ja": "例: 甘いもの全般・牛乳（豆乳はOK）・パクチー", "en": "e.g. Sweets, dairy milk (soy milk OK), cilantro"}),
+        ("allergies",     {"ja": "アレルギー・食事制限",      "en": "Allergies"},          {"ja": "例: なし / 乳製品アレルギー", "en": "e.g. None / Dairy allergy"}),
+        ("staple_pantry", {"ja": "常備調味料",               "en": "Pantry Staples"},     {"ja": "例: 醤油・みりん・オリーブオイル・ナンプラー", "en": "e.g. Soy sauce, mirin, olive oil, fish sauce"}),
+        ("staple_food",   {"ja": "常備食材",                 "en": "Staple Ingredients"}, {"ja": "例: 卵・玉ねぎ・にんにく・米", "en": "e.g. Eggs, onion, garlic, rice"}),
+        ("kitchen_tools", {"ja": "持っている調理器具",        "en": "Kitchen Tools"},      {"ja": "例: フライパン・炊飯器・オーブン・圧力鍋", "en": "e.g. Frying pan, rice cooker, oven, pressure cooker"}),
     ],
     "study": [
         ("major",        {"ja": "専攻・学部",           "en": "Major / Dept."},  {"ja": "例: 経済学部2年", "en": "e.g. Economics, Year 2"}),
@@ -187,23 +192,51 @@ PROFILE_GROUP_FIELDS = {
 PROFILE_GROUP_LABELS = {
     "common": {"ja": "共通（全カテゴリ）",  "en": "Common (All)"},
     "tech":   {"ja": "PC・技術系",          "en": "Tech & Dev"},
-    "life":   {"ja": "生活・レシピ系",      "en": "Life & Recipe"},
+    "life":   {"ja": "生活・健康",          "en": "Life & Health"},
+    "recipe": {"ja": "料理・食事",          "en": "Cooking & Food"},
     "study":  {"ja": "学習系",              "en": "Study & Language"},
 }
+
+
+def migrate_profile(profile: dict) -> dict:
+    """旧形式のカスタムフィールド値を新形式に変換する。"""
+    raw_custom = profile.get("_custom_fields", {})
+    if isinstance(raw_custom, list):
+        raw_custom = {}
+
+    changed = False
+    for group, customs in raw_custom.items():
+        group_data = profile.get(group, {})
+        for cf in customs:
+            key = cf.get("key", "")
+            label = cf.get("label", "")
+            if not key or not label:
+                continue
+            val = group_data.get(key)
+            # 旧形式（文字列）のままなら新形式に変換
+            if val is not None and isinstance(val, str):
+                group_data[key] = {"label": label, "value": val}
+                changed = True
+        profile[group] = group_data
+
+    if changed:
+        _save(PROFILE_FILE, profile)
+    return profile
 
 
 def load_profile() -> dict:
     """プロフィール全体を返す。"""
     if not os.path.exists(PROFILE_FILE):
-        return {"common": {}, "tech": {}, "life": {}, "study": {}, "_custom_fields": {}}
+        return {"common": {}, "tech": {}, "life": {}, "recipe": {}, "study": {}, "_custom_fields": {}}
     with open(PROFILE_FILE, "r", encoding="utf-8") as f:
         data = json.load(f)
-    # 不足グループを補完
-    for g in ["common", "tech", "life", "study"]:
+    for g in ["common", "tech", "life", "recipe", "study"]:
         if g not in data:
             data[g] = {}
     if "_custom_fields" not in data:
         data["_custom_fields"] = {}
+    # 旧形式を自動マイグレーション
+    data = migrate_profile(data)
     return data
 
 
@@ -222,7 +255,7 @@ def get_profile_for_category(category: str) -> dict:
         group_data = profile.get(group, {})
         group_fields = fields_by_group.get(group, [])
 
-        # キー → ラベルのマッピングを作成（デフォルト＋カスタム両方）
+        # デフォルトフィールド: キー → ラベル
         key_to_label = {}
         for field in group_fields:
             key = field[0]
@@ -233,19 +266,22 @@ def get_profile_for_category(category: str) -> dict:
                 display_label = label or key
             key_to_label[key] = display_label
 
-        # カスタムフィールドのラベルも追加
-        custom_fields = profile.get("_custom_fields", {})
-        if isinstance(custom_fields, dict):
-            for cf in custom_fields.get(group, []):
-                cf_key = cf.get("key", "")
-                cf_label = cf.get("label", cf_key)
-                if cf_key:
-                    key_to_label[cf_key] = cf_label
-
         for key, val in group_data.items():
-            if key.startswith("_") or not val or not str(val).strip():
+            if key.startswith("_"):
                 continue
-            label = key_to_label.get(key, key)  # ラベルがなければキーをそのまま使用
+
+            # 新形式: {"label": "...", "value": "..."} で保存されている場合
+            if isinstance(val, dict) and "label" in val and "value" in val:
+                label = val["label"]
+                actual_val = val["value"]
+                if actual_val and str(actual_val).strip():
+                    result[label] = str(actual_val).strip()
+                continue
+
+            # 旧形式: 文字列で保存されている場合
+            if not val or not str(val).strip():
+                continue
+            label = key_to_label.get(key, key)
             result[label] = str(val).strip()
 
     return result
