@@ -1,8 +1,7 @@
 # gemini_client.py
-
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 from storage import load_settings
 
 load_dotenv()
@@ -26,7 +25,7 @@ AVAILABLE_MODELS_FLAT = AVAILABLE_MODELS["gemini"] + AVAILABLE_MODELS["openai"]
 
 
 def _merge_settings(client_settings: dict = None) -> dict:
-    """サーバーのsettingsにクライアントの値をマージ（クライアント優先）。"""
+    """サーバーのsettingsにクライアントの値をマージ（クライアント優先）"""
     server = load_settings()
     if not client_settings:
         return server
@@ -39,13 +38,13 @@ def _merge_settings(client_settings: dict = None) -> dict:
 
 
 def ask_gemini(prompt: str, client_settings: dict = None) -> str:
-    settings = _merge_settings(client_settings)
-    api_key = settings.get("api_key", "").strip() or os.getenv("GEMINI_API_KEY", "")
+    settings  = _merge_settings(client_settings)
+    api_key   = settings.get("api_key", "").strip() or os.getenv("GEMINI_API_KEY", "")
     if not api_key:
         raise ValueError("Gemini APIキーが設定されていません。設定画面からAPIキーを入力してください。")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(settings.get("model", "gemini-2.5-flash"))
-    response = model.generate_content(prompt)
+    client   = genai.Client(api_key=api_key)
+    model    = settings.get("model", "gemini-2.5-flash")
+    response = client.models.generate_content(model=model, contents=prompt)
     return response.text
 
 
@@ -55,14 +54,14 @@ def ask_openai(prompt: str, client_settings: dict = None) -> str:
     except ImportError:
         raise ImportError("openaiライブラリが必要です: pip install openai")
     settings = _merge_settings(client_settings)
-    api_key = settings.get("openai_api_key", "").strip()
+    api_key  = settings.get("openai_api_key", "").strip()
     if not api_key:
         raise ValueError("OpenAI APIキーが設定されていません。設定画面からAPIキーを入力してください。")
-    client = OpenAI(api_key=api_key)
-    model = settings.get("openai_model", "gpt-4o-mini")
+    client   = OpenAI(api_key=api_key)
+    model    = settings.get("openai_model", "gpt-4o-mini")
     response = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": prompt}]
+        messages=[{"role": "user", "content": prompt}],
     )
     return response.choices[0].message.content
 
@@ -72,5 +71,4 @@ def ask_ai(prompt: str, client_settings: dict = None) -> str:
     provider = settings.get("provider", "gemini")
     if provider == "openai":
         return ask_openai(prompt, client_settings=client_settings)
-    else:
-        return ask_gemini(prompt, client_settings=client_settings)
+    return ask_gemini(prompt, client_settings=client_settings)

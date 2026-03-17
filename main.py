@@ -2,6 +2,7 @@
 
 import threading
 import webbrowser
+import os
 from flask import Flask, render_template, request, jsonify
 
 from templates import LANG_UI, CATEGORIES, CATEGORY_KEY_MAP, TEMPLATES, build_prompt
@@ -17,36 +18,36 @@ from storage import (
     load_instruction_presets, save_instruction_preset, delete_instruction_preset,
 )
 
-import os
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "templates"))
 
+
 # ────────────────────────────────────────────
-# API エンドポイント
+# ページ
 # ────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
+# ────────────────────────────────────────────
+# プロンプト生成
+# ────────────────────────────────────────────
 @app.route("/api/fields")
 def api_fields():
-    category = request.args.get("category", "ai_pm")
-    lang = request.args.get("lang", "ja")
-    tmpl = TEMPLATES[category][lang]
+    category      = request.args.get("category", "ai_pm")
+    lang          = request.args.get("lang", "ja")
+    tmpl          = TEMPLATES[category][lang]
     custom_options = load_all_field_options(category)
-    return jsonify({
-        "fields": tmpl["fields"],
-        "custom_options": custom_options,
-    })
+    return jsonify({"fields": tmpl["fields"], "custom_options": custom_options})
 
 
 @app.route("/api/build_prompt", methods=["POST"])
 def api_build_prompt():
     from storage import get_profile_for_category
-    data = request.json
+    data    = request.json
     category = data["category"]
-    profile = get_profile_for_category(category)
-    prompt = build_prompt(
+    profile  = get_profile_for_category(category)
+    prompt   = build_prompt(
         category, data["lang"],
         data["user_inputs"],
         profile=profile,
@@ -63,7 +64,6 @@ def api_build_prompt():
 def api_ask_ai():
     data = request.json
     try:
-        # クライアントから送られたAPIキーを使用（なければサーバーのsettings.jsonにフォールバック）
         client_settings = {
             "api_key":        data.get("api_key", ""),
             "openai_api_key": data.get("openai_api_key", ""),
@@ -77,13 +77,13 @@ def api_ask_ai():
         return jsonify({"error": str(e)})
 
 
+# ────────────────────────────────────────────
+# 履歴
+# ────────────────────────────────────────────
 @app.route("/api/save_history", methods=["POST"])
 def api_save_history():
     data = request.json
-    save_history(
-        data["category"], data["lang"],
-        data["prompt"], data.get("answer", "")
-    )
+    save_history(data["category"], data["lang"], data["prompt"], data.get("answer", ""))
     return jsonify({"ok": True})
 
 
@@ -104,13 +104,13 @@ def api_clear_history():
     return jsonify({"ok": True})
 
 
+# ────────────────────────────────────────────
+# お気に入り
+# ────────────────────────────────────────────
 @app.route("/api/save_favorite", methods=["POST"])
 def api_save_favorite():
     data = request.json
-    save_favorite(
-        data["category"], data["lang"],
-        data["prompt"], data.get("title", "")
-    )
+    save_favorite(data["category"], data["lang"], data["prompt"], data.get("title", ""))
     return jsonify({"ok": True})
 
 
@@ -125,33 +125,41 @@ def api_delete_favorite(entry_id):
     return jsonify({"ok": True})
 
 
+# ────────────────────────────────────────────
+# 設定
+# ────────────────────────────────────────────
 @app.route("/api/settings")
 def api_settings():
     settings = load_settings()
     return jsonify({
-        "api_key":          settings.get("api_key", ""),
-        "openai_api_key":   settings.get("openai_api_key", ""),
-        "model":            settings.get("model", "gemini-2.5-flash"),
-        "openai_model":     settings.get("openai_model", "gpt-4o-mini"),
-        "provider":         settings.get("provider", "gemini"),
-        "gemini_models":    AVAILABLE_MODELS["gemini"],
-        "openai_models":    AVAILABLE_MODELS["openai"],
+        "api_key":        settings.get("api_key", ""),
+        "openai_api_key": settings.get("openai_api_key", ""),
+        "model":          settings.get("model", "gemini-2.5-flash"),
+        "openai_model":   settings.get("openai_model", "gpt-4o-mini"),
+        "provider":       settings.get("provider", "gemini"),
+        "gemini_models":  AVAILABLE_MODELS["gemini"],
+        "openai_models":  AVAILABLE_MODELS["openai"],
     })
 
 
 @app.route("/api/save_settings", methods=["POST"])
 def api_save_settings():
-    data = request.json
+    data     = request.json
     settings = load_settings()
-    settings["api_key"]        = data.get("api_key", "")
-    settings["openai_api_key"] = data.get("openai_api_key", "")
-    settings["model"]          = data.get("model", "gemini-2.5-flash")
-    settings["openai_model"]   = data.get("openai_model", "gpt-4o-mini")
-    settings["provider"]       = data.get("provider", "gemini")
+    settings.update({
+        "api_key":        data.get("api_key", ""),
+        "openai_api_key": data.get("openai_api_key", ""),
+        "model":          data.get("model", "gemini-2.5-flash"),
+        "openai_model":   data.get("openai_model", "gpt-4o-mini"),
+        "provider":       data.get("provider", "gemini"),
+    })
     save_settings(settings)
     return jsonify({"ok": True})
 
 
+# ────────────────────────────────────────────
+# プリセット
+# ────────────────────────────────────────────
 @app.route("/api/presets")
 def api_presets():
     category = request.args.get("category", "ai_pm")
@@ -172,6 +180,9 @@ def api_delete_preset():
     return jsonify({"ok": True})
 
 
+# ────────────────────────────────────────────
+# プロフィール
+# ────────────────────────────────────────────
 @app.route("/api/profile")
 def api_profile():
     from storage import PROFILE_GROUP_LABELS, PROFILE_GROUP_FIELDS
@@ -185,30 +196,27 @@ def api_profile():
 
 @app.route("/api/save_profile", methods=["POST"])
 def api_save_profile():
-    data = request.json
-    save_profile(data["profile"])
+    save_profile(request.json["profile"])
     return jsonify({"ok": True})
 
 
 @app.route("/api/add_profile_field", methods=["POST"])
 def api_add_profile_field():
     data = request.json
-    save_profile_custom_field(
-        data.get("group", "common"), data["key"], data["label"]
-    )
+    save_profile_custom_field(data.get("group", "common"), data["key"], data["label"])
     return jsonify({"ok": True})
 
 
 @app.route("/api/delete_profile_field", methods=["DELETE"])
 def api_delete_profile_field():
     data = request.json
-    delete_profile_custom_field(
-        data.get("group", "common"), data["key"]
-    )
+    delete_profile_custom_field(data.get("group", "common"), data["key"])
     return jsonify({"ok": True})
 
 
-# ── フィールドオプション ────────────────────
+# ────────────────────────────────────────────
+# フィールドオプション
+# ────────────────────────────────────────────
 @app.route("/api/save_field_option", methods=["POST"])
 def api_save_field_option():
     data = request.json
@@ -225,7 +233,7 @@ def api_delete_field_option():
 
 @app.route("/api/custom_options_all")
 def api_custom_options_all():
-    import json, os
+    import json
     filepath = "custom_options.json"
     if not os.path.exists(filepath):
         return jsonify({"custom_options": {}})
@@ -233,20 +241,10 @@ def api_custom_options_all():
         data = json.load(f)
     return jsonify({"custom_options": data})
 
-@app.route("/api/save_custom_option", methods=["POST"])
-def api_save_custom_option():
-    data = request.json
-    save_custom_option(data["field_key"], data["value"])
-    return jsonify({"ok": True})
 
-@app.route("/api/delete_custom_option", methods=["DELETE"])
-def api_delete_custom_option():
-    data = request.json
-    delete_custom_option(data["field_key"], data["value"])
-    return jsonify({"ok": True})
-
-
-# ── 指示プリセット ──────────────────────────
+# ────────────────────────────────────────────
+# 指示プリセット
+# ────────────────────────────────────────────
 @app.route("/api/instruction_presets")
 def api_instruction_presets():
     return jsonify({"presets": load_instruction_presets()})
@@ -255,16 +253,13 @@ def api_instruction_presets():
 @app.route("/api/save_instruction_preset", methods=["POST"])
 def api_save_instruction_preset():
     data = request.json
-    save_instruction_preset(
-        data["key"], data["name"], data["instructions"]
-    )
+    save_instruction_preset(data["key"], data["name"], data["instructions"])
     return jsonify({"ok": True})
 
 
 @app.route("/api/delete_instruction_preset", methods=["DELETE"])
 def api_delete_instruction_preset():
-    data = request.json
-    delete_instruction_preset(data["key"])
+    delete_instruction_preset(request.json["key"])
     return jsonify({"ok": True})
 
 
@@ -272,8 +267,7 @@ def api_delete_instruction_preset():
 # エントリーポイント
 # ────────────────────────────────────────────
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5001))
+    port     = int(os.environ.get("PORT", 5001))
     is_local = port == 5001
     if is_local:
         url = f"http://127.0.0.1:{port}"
