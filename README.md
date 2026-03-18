@@ -196,8 +196,4 @@ AI Engineer / Data Scientist / PM
 
 Currently seeking CPT part-time positions in Data Science / AI Engineering.
 
----
-
-## 📄 License
-
 MIT License
