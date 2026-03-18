@@ -14,10 +14,12 @@
             justify-content: space-between; flex-shrink: 0; }
   .header h1 { color: #fff; font-size: 18px; font-weight: 700; }
   .header-btns { display: flex; gap: 8px; }
-  .header-btns button { background: #e0e0e0; color: #1a1a2e; border: none;
+  .header-btns button,
+  .header-btns a { background: #e0e0e0; color: #1a1a2e; border: none;
     border-radius: 6px; padding: 6px 14px; cursor: pointer;
-    font-size: 13px; font-weight: 500; }
-  .header-btns button:hover { background: #cccccc; }
+    font-size: 13px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; }
+  .header-btns button:hover,
+  .header-btns a:hover { background: #cccccc; }
   .profile-btn { background: #4a90d9 !important; color: #fff !important; }
   .profile-btn:hover { background: #357abd !important; }
 
@@ -425,6 +427,7 @@
     <button id="history-btn" onclick="openHistory()">履歴</button>
     <button id="favorites-btn" onclick="openFavorites()">お気に入り</button>
     <button id="settings-btn" onclick="openSettings()">設定</button>
+    <a id="portfolio-btn" href="https://mona2083.github.io/portfolio-2026/index.html" target="_blank" rel="noopener">ポートフォリオ</a>
     <button id="lang-btn" onclick="toggleLang()">EN</button>
   </div>
 </div>
@@ -717,6 +720,7 @@ const UI = {
     promptLabel: "▼ 生成されたプロンプト", answerLabel: "▼ AIの回答",
     copyPrompt: "プロンプトをコピー", copyAnswer: "回答をコピー",
     loading: "AIに送信中...", done: "完了", langBtn: "EN",
+    portfolioBtn: "ポートフォリオ",
     sendOption: "AIに送信して回答を取得する",
     simpleMode: "追加質問モード（質問のみ送信）",
     errorEmpty: "質問・依頼内容を入力してください",
@@ -802,6 +806,7 @@ const UI = {
     promptLabel: "▼ Generated Prompt", answerLabel: "▼ AI Answer",
     copyPrompt: "Copy Prompt", copyAnswer: "Copy Answer",
     loading: "Sending to AI...", done: "Done", langBtn: "JA",
+    portfolioBtn: "Portfolio",
     sendOption: "Send to AI and get answer",
     simpleMode: "Follow-up mode (question only)",
     errorEmpty: "Please enter your question / request",
@@ -2142,6 +2147,7 @@ function updateStaticLabels() {
   set("history-btn", ui.historyBtn);
   set("favorites-btn", ui.favoritesBtn);
   set("settings-btn", ui.settingsBtn);
+  set("portfolio-btn", ui.portfolioBtn);
 
   // Main panel
   set("profile-edit-btn", ui.profileEditBtn);
