@@ -33,7 +33,10 @@ def api_fields():
     category = request.args.get("category", "ai_pm")
     lang = request.args.get("lang", "ja")
     tmpl = TEMPLATES[category][lang]
-    custom_options = load_all_field_options(category)
+    # storage.load_all_field_options() now returns all categories.
+    # Keep API response backward-compatible for frontend by returning
+    # only the selected category's field options.
+    custom_options = load_all_field_options().get(category, {})
     return jsonify({
         "fields": tmpl["fields"],
         "custom_options": custom_options,
@@ -155,7 +158,13 @@ def api_save_settings():
 @app.route("/api/presets")
 def api_presets():
     category = request.args.get("category", "ai_pm")
-    return jsonify({"presets": load_presets(category)})
+    presets_by_category = load_presets().get(category, {})
+    # Frontend expects a list of {id, name, fields}.
+    presets = [
+        {"id": name, "name": name, "fields": fields}
+        for name, fields in presets_by_category.items()
+    ]
+    return jsonify({"presets": presets})
 
 
 @app.route("/api/save_preset", methods=["POST"])
@@ -168,7 +177,9 @@ def api_save_preset():
 @app.route("/api/delete_preset", methods=["DELETE"])
 def api_delete_preset():
     data = request.json
-    delete_preset(data["category"], data["preset_id"])
+    # Frontend sends preset_id; in current storage schema preset key is the name.
+    preset_key = data.get("preset_id") or data.get("name")
+    delete_preset(data["category"], preset_key)
     return jsonify({"ok": True})
 
 

@@ -1,1 +1,1 @@
-echo "web: gunicorn main:app" > ~/Desktop/prompt_builder/Procfile
+web: python main.py
