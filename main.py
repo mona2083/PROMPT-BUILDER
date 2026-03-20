@@ -158,19 +158,55 @@ def api_save_settings():
 @app.route("/api/presets")
 def api_presets():
     category = request.args.get("category", "ai_pm")
-    presets_by_category = load_presets().get(category, {})
-    # Frontend expects a list of {id, name, fields}.
-    presets = [
-        {"id": name, "name": name, "fields": fields}
-        for name, fields in presets_by_category.items()
-    ]
+    raw = load_presets().get(category, {})
+    # Backward compatibility:
+    # - new schema: { "<name>": { ...fields... }, ... }
+    # - old schema: [ {id, name, fields}, ... ]
+    if isinstance(raw, dict):
+        presets = [{"id": name, "name": name, "fields": fields} for name, fields in raw.items()]
+    elif isinstance(raw, list):
+        presets = []
+        for p in raw:
+            if not isinstance(p, dict):
+                continue
+            name = p.get("name") or p.get("id") or ""
+            if not name:
+                continue
+            fields = p.get("fields", {})
+            if not isinstance(fields, dict):
+                fields = {}
+            presets.append({"id": p.get("id", name), "name": name, "fields": fields})
+    else:
+        presets = []
     return jsonify({"presets": presets})
 
 
 @app.route("/api/save_preset", methods=["POST"])
 def api_save_preset():
     data = request.json
-    save_preset(data["category"], data["name"], data["fields"])
+    category = data["category"]
+    name = data["name"]
+    fields = data["fields"]
+
+    all_presets = load_presets()
+    raw = all_presets.get(category, {})
+
+    if isinstance(raw, list):
+        # Old list schema in file: upsert in list form
+        updated = False
+        for p in raw:
+            if isinstance(p, dict) and p.get("name") == name:
+                p["fields"] = fields
+                updated = True
+                break
+        if not updated:
+            raw.append({"id": name, "name": name, "fields": fields})
+        all_presets[category] = raw
+        from storage import _save, PRESETS_FILE  # local import to avoid widening top-level API
+        _save(PRESETS_FILE, all_presets)
+    else:
+        # New dict schema
+        save_preset(category, name, fields)
     return jsonify({"ok": True})
 
 
@@ -179,7 +215,19 @@ def api_delete_preset():
     data = request.json
     # Frontend sends preset_id; in current storage schema preset key is the name.
     preset_key = data.get("preset_id") or data.get("name")
-    delete_preset(data["category"], preset_key)
+    category = data["category"]
+    all_presets = load_presets()
+    raw = all_presets.get(category, {})
+
+    if isinstance(raw, list):
+        all_presets[category] = [
+            p for p in raw
+            if not (isinstance(p, dict) and (p.get("name") == preset_key or p.get("id") == preset_key))
+        ]
+        from storage import _save, PRESETS_FILE  # local import to avoid widening top-level API
+        _save(PRESETS_FILE, all_presets)
+    else:
+        delete_preset(category, preset_key)
     return jsonify({"ok": True})
 
 

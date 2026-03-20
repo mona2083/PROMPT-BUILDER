@@ -786,11 +786,14 @@ const UI = {
 };
 
 const CATEGORIES = {
-  ja: ["AI-PM", "コード", "生活・健康", "大学勉強", "語学学習", "チャット", "レシピ", "その他"],
-  en: ["AI-PM", "Code", "Health & Life", "Study", "Language", "Chat", "Recipe", "Other"],
+  ja: ["AI-PM", "コード単体質問", "アプリ開発", "AIモデル開発", "生活・健康", "大学勉強", "語学学習", "チャット", "レシピ", "その他"],
+  en: ["AI-PM", "Code Q&A", "App Dev", "AI/ML Dev", "Health & Life", "Study", "Language", "Chat", "Recipe", "Other"],
 };
 const CAT_KEY_MAP = {
-  "AI-PM": "ai_pm", "コード": "code", "Code": "code",
+  "AI-PM": "ai_pm", "コード単体質問": "code", "Code Q&A": "code",
+  "コード": "code", "Code": "code",
+  "アプリ開発": "app_dev", "App Dev": "app_dev",
+  "AIモデル開発": "ai_ml", "AI/ML Dev": "ai_ml",
   "生活・健康": "health", "Health & Life": "health",
   "大学勉強": "study", "Study": "study",
   "語学学習": "language", "Language": "language",
@@ -800,7 +803,9 @@ const CAT_KEY_MAP = {
 };
 const CAT_LABELS = {
   ai_pm:    { ja: "AI-PM",      en: "AI-PM" },
-  code:     { ja: "コード",     en: "Code" },
+  code:     { ja: "コード単体質問", en: "Code Q&A" },
+  app_dev:  { ja: "アプリ開発", en: "App Dev" },
+  ai_ml:    { ja: "AIモデル開発", en: "AI/ML Dev" },
   health:   { ja: "生活・健康", en: "Health & Life" },
   study:    { ja: "大学勉強",   en: "Study" },
   language: { ja: "語学学習",   en: "Language" },
@@ -1596,9 +1601,23 @@ function updateProfileBadge() {
   const text = document.getElementById("profile-badge-text");
   // common グループの入力済み項目を表示
   const common = (currentProfile && currentProfile.common) ? currentProfile.common : {};
-  const filled = Object.entries(common).filter(([k,v]) => v && v.trim());
+  // /api/profile は文字列だけでなく {label, value} 形式を返す場合がある。
+  // 表示判定用に文字列へ正規化してから評価する。
+  const toText = (v) => {
+    if (typeof v === "string") return v.trim();
+    if (typeof v === "number" || typeof v === "boolean") return String(v).trim();
+    if (v && typeof v === "object" && "value" in v) {
+      const vv = v.value;
+      if (typeof vv === "string") return vv.trim();
+      if (typeof vv === "number" || typeof vv === "boolean") return String(vv).trim();
+    }
+    return "";
+  };
+  const filled = Object.entries(common).filter(([k, v]) => {
+    return toText(v).length > 0;
+  });
   if (filled.length > 0) {
-    const preview = filled.slice(0, 2).map(([k,v]) => v).join(" / ");
+    const preview = filled.slice(0, 2).map(([k,v]) => toText(v)).join(" / ");
     const badgePrefix = lang === "ja" ? "プロフィール設定済み: " : "Profile set: ";
     text.textContent = badgePrefix + preview + (filled.length > 2 ? " ..." : "");
     badge.style.display = "flex";
@@ -1678,7 +1697,12 @@ function renderProfileFields(group) {
     inp.type = "text";
     inp.dataset.key = key;
     inp.dataset.group = group;
-    inp.value = groupData[key] || "";
+    const rawVal = groupData[key];
+    if (rawVal && typeof rawVal === "object" && "value" in rawVal) {
+      inp.value = String(rawVal.value || "");
+    } else {
+      inp.value = String(rawVal || "");
+    }
     const labelText = (label && typeof label === "object") ? (label[lang] || label["ja"] || key) : label;
     const phText = (placeholder && typeof placeholder === "object") ? (placeholder[lang] || placeholder["ja"] || "") : (placeholder || "");
     inp.placeholder = phText || labelText;
@@ -1717,6 +1741,9 @@ async function addCustomField() {
   // サーバーからフィールド定義だけ更新、入力値はcurrentProfileから復元
   const res = await fetch("/api/profile");
   const data = await res.json();
+  // Important: keep currentProfile in sync with server after adding custom field.
+  // Otherwise saveProfile may overwrite _custom_fields with stale client state.
+  currentProfile = data.profile;
   profileFields = data.fields;
   profileGroupLabels = data.group_labels || {};
   profileGroupKeys = data.group_keys || ["common","tech","life","study"];
