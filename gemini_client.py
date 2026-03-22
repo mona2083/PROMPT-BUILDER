@@ -1,11 +1,16 @@
 # gemini_client.py
 
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 import google.generativeai as genai
 from storage import load_settings
 
-load_dotenv()
+# Always load .env from the project root (next to this file), not from the process CWD.
+# Gunicorn/systemd sometimes run with a different working directory, which breaks bare load_dotenv().
+_PROJECT_ROOT = Path(__file__).resolve().parent
+load_dotenv(_PROJECT_ROOT / ".env")
 
 AVAILABLE_MODELS = {
     "gemini": [
