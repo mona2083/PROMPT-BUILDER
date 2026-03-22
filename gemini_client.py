@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 from storage import load_settings
@@ -28,6 +29,11 @@ _PROJECT_ROOT = Path(__file__).resolve().parent
 load_dotenv(_PROJECT_ROOT / ".env", encoding="utf-8-sig", override=True)
 
 
+def _dotenv_var_name(name: str) -> str:
+    """Strip BOM / whitespace so .env lines match GEMINI_API_KEY even if the file has a UTF-8 BOM on the first key."""
+    return name.strip().lstrip("\ufeff").strip()
+
+
 def _read_dotenv_manual(key: str) -> str:
     """If os.environ is missing the key, parse .env directly (handles odd server/Gunicorn cases)."""
     path = _PROJECT_ROOT / ".env"
@@ -46,13 +52,43 @@ def _read_dotenv_manual(key: str) -> str:
         if "=" not in line:
             continue
         name, _, val = line.partition("=")
-        if name.strip() != key:
+        if _dotenv_var_name(name) != key:
             continue
         val = val.strip()
         if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
             val = val[1:-1]
         return val.strip()
     return ""
+
+
+def _resolved_gemini_api_key(client_settings: Optional[dict], merged: dict) -> str:
+    """
+    1) Non-empty key from browser (client) wins.
+    2) Then GEMINI_API_KEY from environment or .env file (deploy / demo).
+    3) Then api_key from settings.json (merged), when client did not send a key.
+    This avoids an empty or stale settings.json blocking .env.
+    """
+    cs = client_settings or {}
+    raw = cs.get("api_key", "")
+    client_key = str(raw).strip() if raw is not None else ""
+    if client_key:
+        return client_key
+    env_or_file = (os.getenv("GEMINI_API_KEY") or "").strip() or _read_dotenv_manual("GEMINI_API_KEY")
+    if env_or_file:
+        return env_or_file
+    return (merged.get("api_key") or "").strip()
+
+
+def _resolved_openai_api_key(client_settings: Optional[dict], merged: dict) -> str:
+    cs = client_settings or {}
+    raw = cs.get("openai_api_key", "")
+    client_key = str(raw).strip() if raw is not None else ""
+    if client_key:
+        return client_key
+    env_or_file = (os.getenv("OPENAI_API_KEY") or "").strip() or _read_dotenv_manual("OPENAI_API_KEY")
+    if env_or_file:
+        return env_or_file
+    return (merged.get("openai_api_key") or "").strip()
 
 
 AVAILABLE_MODELS = {
@@ -97,11 +133,7 @@ def _merge_settings(client_settings: dict = None) -> dict:
 
 def ask_gemini(prompt: str, client_settings: dict = None) -> str:
     settings = _merge_settings(client_settings)
-    api_key = (
-        settings.get("api_key", "").strip()
-        or (os.getenv("GEMINI_API_KEY") or "").strip()
-        or _read_dotenv_manual("GEMINI_API_KEY")
-    )
+    api_key = _resolved_gemini_api_key(client_settings, settings)
     if not api_key:
         raise ValueError("Gemini APIキーが設定されていません。設定画面からAPIキーを入力してください。")
     model_name = settings.get("model", "gemini-2.5-flash")
@@ -133,11 +165,7 @@ def ask_openai(prompt: str, client_settings: dict = None) -> str:
     except ImportError:
         raise ImportError("openaiライブラリが必要です: pip install openai")
     settings = _merge_settings(client_settings)
-    api_key = (
-        settings.get("openai_api_key", "").strip()
-        or (os.getenv("OPENAI_API_KEY") or "").strip()
-        or _read_dotenv_manual("OPENAI_API_KEY")
-    )
+    api_key = _resolved_openai_api_key(client_settings, settings)
     if not api_key:
         raise ValueError("OpenAI APIキーが設定されていません。設定画面からAPIキーを入力してください。")
     client = OpenAI(api_key=api_key)
