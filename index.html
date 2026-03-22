@@ -263,7 +263,7 @@
         <span class="output-label" id="prompt-label">▼ 生成されたプロンプト</span>
         <div class="output-btns">
           <button class="output-btn" onclick="saveFavorite()">★ 保存</button>
-          <button class="output-btn" id="copy-prompt-btn" onclick="copyPrompt()">プロンプトをコピー</button>
+          <button type="button" class="output-btn" id="copy-prompt-btn">プロンプトをコピー</button>
         </div>
       </div>
       <div class="output-box" id="prompt-box"></div>
@@ -273,7 +273,7 @@
     <div class="answer-section">
       <div class="output-header">
         <span class="output-label" id="answer-label">▼ AIの回答</span>
-        <button class="output-btn" id="copy-answer-btn" onclick="copyAnswer()">回答をコピー</button>
+        <button type="button" class="output-btn" id="copy-answer-btn">回答をコピー</button>
       </div>
       <div class="output-box answer-box" id="answer-box"></div>
     </div>
@@ -431,6 +431,18 @@ const CAT_LABELS = {
 // 初期化
 // ────────────────────────────────────────────
 window.onload = async () => {
+  const copyPromptBtn = document.getElementById("copy-prompt-btn");
+  const copyAnswerBtn = document.getElementById("copy-answer-btn");
+  if (copyPromptBtn) {
+    copyPromptBtn.onclick = null;
+    copyPromptBtn.removeAttribute("onclick");
+    copyPromptBtn.addEventListener("click", () => pbCopyGeneratedPrompt());
+  }
+  if (copyAnswerBtn) {
+    copyAnswerBtn.onclick = null;
+    copyAnswerBtn.removeAttribute("onclick");
+    copyAnswerBtn.addEventListener("click", () => pbCopyAiAnswer());
+  }
   await loadProfileData();
   buildTabs();
   await loadCategory(currentCategory);
@@ -861,18 +873,88 @@ async function saveSettings() {
 }
 
 // ────────────────────────────────────────────
-// コピー
+// コピー（HTTP: クリック直後に同期 execCommand。await clipboard を先に使わない）
 // ────────────────────────────────────────────
-function copyPrompt() {
-  if (!generatedPrompt) return;
-  navigator.clipboard.writeText(generatedPrompt);
-  setStatus("コピーしました");
+function tryCopyFromElement(el) {
+  if (!el || !el.textContent || !String(el.textContent).trim()) return false;
+  try {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    const ok = document.execCommand("copy");
+    s.removeAllRanges();
+    return ok;
+  } catch (e) {
+    try { window.getSelection().removeAllRanges(); } catch (e2) { /* ignore */ }
+    return false;
+  }
 }
-function copyAnswer() {
-  const text = document.getElementById("answer-box").textContent;
+function copyViaExecCommand(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("aria-hidden", "true");
+  ta.style.cssText =
+    "position:fixed;top:0;left:0;width:2px;height:2px;padding:0;margin:0;border:0;outline:0;opacity:0;z-index:9999;";
+  document.body.appendChild(ta);
+  ta.focus();
+  try {
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+  } catch (e) { /* ignore */ }
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch (e) { /* ignore */ }
+  ta.remove();
+  return ok;
+}
+function copyToClipboardWithFeedback(text, okMsg, failMsg, optSourceEl) {
   if (!text) return;
-  navigator.clipboard.writeText(text);
-  setStatus("コピーしました");
+  if (optSourceEl && tryCopyFromElement(optSourceEl)) {
+    setStatus(okMsg);
+    return;
+  }
+  if (copyViaExecCommand(text)) {
+    setStatus(okMsg);
+    return;
+  }
+  setStatus(failMsg);
+}
+
+function getPromptTextToCopy() {
+  let t = (generatedPrompt || "").trim();
+  if (t) return t;
+  const box = document.getElementById("prompt-box");
+  const boxText = box && box.textContent ? box.textContent.trim() : "";
+  return boxText || "";
+}
+
+function pbCopyGeneratedPrompt() {
+  const emptyMsg = lang === "ja" ? "コピーするプロンプトがありません" : "Nothing to copy";
+  const okMsg = lang === "ja" ? "コピーしました" : "Copied";
+  const failMsg = lang === "ja" ? "コピーに失敗しました（手動で選択してコピーしてください）" : "Copy failed — select text and copy manually";
+  const box = document.getElementById("prompt-box");
+  const boxText = box && box.textContent ? box.textContent.trim() : "";
+  if (!boxText) {
+    const text = getPromptTextToCopy();
+    if (!text) {
+      setStatus(emptyMsg);
+      return;
+    }
+    copyToClipboardWithFeedback(text, okMsg, failMsg, null);
+    return;
+  }
+  copyToClipboardWithFeedback(boxText, okMsg, failMsg, box);
+}
+function pbCopyAiAnswer() {
+  const okMsg = lang === "ja" ? "コピーしました" : "Copied";
+  const failMsg = lang === "ja" ? "コピーに失敗しました（手動で選択してコピーしてください）" : "Copy failed — select text and copy manually";
+  const ans = document.getElementById("answer-box");
+  const text = (ans && ans.textContent) ? ans.textContent.trim() : "";
+  if (!text) return;
+  copyToClipboardWithFeedback(text, okMsg, failMsg, ans);
 }
 
 // ────────────────────────────────────────────

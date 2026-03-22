@@ -9,7 +9,7 @@ load_dotenv(_APP_ROOT / ".env", encoding="utf-8-sig", override=True)
 
 import threading
 import webbrowser
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 
 from templates import LANG_UI, CATEGORIES, CATEGORY_KEY_MAP, TEMPLATES, build_prompt
 from gemini_client import ask_ai, AVAILABLE_MODELS, _read_dotenv_manual
@@ -32,7 +32,17 @@ app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "t
 # ────────────────────────────────────────────
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # LAN/HTTP でもブラウザが古い index.html をキャッシュすると、修正済み JS が読まれず
+    # 「navigator.clipboard.writeText」例外が残ることがあるため no-store を付与
+    resp = make_response(render_template("index.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return ("", 204)
 
 
 @app.route("/api/fields")

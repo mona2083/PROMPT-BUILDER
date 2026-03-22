@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>AI Prompt Builder</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -495,7 +497,7 @@
         <span class="output-label" id="prompt-label">▼ 生成されたプロンプト</span>
         <div class="output-btns">
           <button class="output-btn" id="save-prompt-btn" onclick="saveFavorite()">★ 保存</button>
-          <button class="output-btn" id="copy-prompt-btn" onclick="copyPrompt()">プロンプトをコピー</button>
+          <button type="button" class="output-btn" id="copy-prompt-btn">プロンプトをコピー</button>
         </div>
       </div>
       <div class="output-box" id="prompt-box"></div>
@@ -503,7 +505,7 @@
     <div class="answer-section">
       <div class="output-header">
         <span class="output-label" id="answer-label">▼ AIの回答</span>
-        <button class="output-btn" id="copy-answer-btn" onclick="copyAnswer()">回答をコピー</button>
+        <button type="button" class="output-btn" id="copy-answer-btn">回答をコピー</button>
       </div>
       <div class="output-box answer-box" id="answer-box"></div>
     </div>
@@ -645,6 +647,10 @@
 let lang = "ja";
 let currentCategory = "ai_pm";
 let generatedPrompt = "";
+/** onSend より前に宣言必須（未初期化参照で生成ボタンが死なないように） */
+let templatePrompt = "";
+let optimizedPrompt = "";
+let currentPromptTab = "template";
 let currentProfile = {};
 let profileFields = [];
 let currentProvider = "gemini";
@@ -818,6 +824,23 @@ const CAT_LABELS = {
 };
 
 window.onload = async () => {
+  // コピー: 古い onclick=copyPrompt（clipboard.writeText 版）が残っていると例外になるため、
+  // 必ず既存ハンドラを消してから専用リスナのみ付与する
+  (function wireCopyButtons() {
+    const cp = document.getElementById("copy-prompt-btn");
+    const ca = document.getElementById("copy-answer-btn");
+    if (cp) {
+      cp.onclick = null;
+      cp.removeAttribute("onclick");
+      cp.addEventListener("click", pbCopyGeneratedPrompt);
+    }
+    if (ca) {
+      ca.onclick = null;
+      ca.removeAttribute("onclick");
+      ca.addEventListener("click", pbCopyAiAnswer);
+    }
+  })();
+
   await loadProfileData();
   await loadInstructionPresets();
   await restoreInstructionsState();
@@ -2151,10 +2174,6 @@ async function saveSettings() {
   setStatus(lang === "ja" ? "設定を保存しました" : "Settings saved");
 }
 
-let templatePrompt = "";
-let optimizedPrompt = "";
-let currentPromptTab = "template";
-
 function switchPromptTab(tab) {
   currentPromptTab = tab;
   document.getElementById("tab-template").classList.toggle("active", tab === "template");
@@ -2167,20 +2186,105 @@ function switchPromptTab(tab) {
     document.getElementById("prompt-box").textContent = optimizedPrompt || (
       lang === "ja" ? "（まだ最適化されていません）" : "(Not yet optimized)"
     );
-    if (optimizedPrompt) generatedPrompt = optimizedPrompt;
+    generatedPrompt = optimizedPrompt ? optimizedPrompt : templatePrompt;
   }
 }
 
-function copyPrompt() {
-  if (!generatedPrompt) return;
-  navigator.clipboard.writeText(generatedPrompt);
-  setStatus("コピーしました");
+/** 画面上の要素をそのまま選択してコピー（HTTP でも効くことが多い） */
+function tryCopyFromElement(el) {
+  if (!el || !el.textContent || !String(el.textContent).trim()) return false;
+  try {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    const ok = document.execCommand("copy");
+    s.removeAllRanges();
+    return ok;
+  } catch (e) {
+    try { window.getSelection().removeAllRanges(); } catch (e2) { /* ignore */ }
+    return false;
+  }
 }
-function copyAnswer() {
-  const text = document.getElementById("answer-box").textContent;
+
+/**
+ * 同期で execCommand（クリック直後のユーザー操作コンテキストを維持）。
+ * async/await や navigator.clipboard を先に呼ぶと HTTP 環境でコピーが失敗することがある。
+ */
+function copyViaExecCommand(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("aria-hidden", "true");
+  ta.style.cssText =
+    "position:fixed;top:0;left:0;width:2px;height:2px;padding:0;margin:0;border:0;outline:0;opacity:0;z-index:9999;";
+  document.body.appendChild(ta);
+  ta.focus();
+  try {
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+  } catch (e) { /* ignore */ }
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch (e) { /* ignore */ }
+  ta.remove();
+  return ok;
+}
+
+/** まず DOM 選択 → textarea 同期コピー → HTTPS のみ Clipboard API */
+function copyToClipboardWithFeedback(text, okMsg, failMsg, optSourceEl) {
   if (!text) return;
-  navigator.clipboard.writeText(text);
-  setStatus("コピーしました");
+  if (optSourceEl && tryCopyFromElement(optSourceEl)) {
+    setStatus(okMsg);
+    return;
+  }
+  if (copyViaExecCommand(text)) {
+    setStatus(okMsg);
+    return;
+  }
+  // navigator.clipboard は HTTP / 一部ブラウザで undefined になり例外になるため使わない
+  setStatus(failMsg);
+}
+
+function getPromptTextToCopy() {
+  const phJa = "（まだ最適化されていません）";
+  const phEn = "(Not yet optimized)";
+  let t = (generatedPrompt || "").trim();
+  if (t) return t;
+  const box = document.getElementById("prompt-box");
+  const boxText = box && box.textContent ? box.textContent.trim() : "";
+  if (boxText && boxText !== phJa && boxText !== phEn) return boxText;
+  return (templatePrompt || "").trim();
+}
+
+/** 旧名 copyPrompt はキャッシュ/拡張機能と衝突しやすいため改名（clipboard API は使わない） */
+function pbCopyGeneratedPrompt() {
+  const emptyMsg = lang === "ja" ? "コピーするプロンプトがありません" : "Nothing to copy";
+  const okMsg = lang === "ja" ? "コピーしました" : "Copied";
+  const failMsg = lang === "ja" ? "コピーに失敗しました（手動で選択してコピーしてください）" : "Copy failed — select text and copy manually";
+  const phJa = "（まだ最適化されていません）";
+  const phEn = "(Not yet optimized)";
+  const box = document.getElementById("prompt-box");
+  const boxText = box && box.textContent ? box.textContent.trim() : "";
+  if (!boxText || boxText === phJa || boxText === phEn) {
+    const text = getPromptTextToCopy();
+    if (!text) {
+      setStatus(emptyMsg);
+      return;
+    }
+    copyToClipboardWithFeedback(text, okMsg, failMsg, null);
+    return;
+  }
+  copyToClipboardWithFeedback(boxText, okMsg, failMsg, box);
+}
+function pbCopyAiAnswer() {
+  const okMsg = lang === "ja" ? "コピーしました" : "Copied";
+  const failMsg = lang === "ja" ? "コピーに失敗しました（手動で選択してコピーしてください）" : "Copy failed — select text and copy manually";
+  const ans = document.getElementById("answer-box");
+  const text = (ans && ans.textContent) ? ans.textContent.trim() : "";
+  if (!text) return;
+  copyToClipboardWithFeedback(text, okMsg, failMsg, ans);
 }
 
 async function saveFavorite() {

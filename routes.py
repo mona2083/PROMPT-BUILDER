@@ -2,7 +2,7 @@
 
 import os
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, make_response
 
 from templates import TEMPLATES, build_prompt
 from gemini_client import ask_ai, AVAILABLE_MODELS, _read_dotenv_manual
@@ -13,7 +13,15 @@ bp = Blueprint("prompt_builder_routes", __name__)
 
 @bp.route("/")
 def index():
-    return render_template("index.html")
+    resp = make_response(render_template("index.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+@bp.route("/favicon.ico")
+def favicon():
+    return ("", 204)
 
 
 @bp.route("/api/fields")
