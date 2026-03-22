@@ -4,8 +4,21 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from google import genai as google_genai
 from storage import load_settings
+
+# Prefer new SDK (google-genai). Fall back to legacy google-generativeai if venv only has that
+# (avoids: ImportError: cannot import name 'genai' from 'google').
+try:
+    from google import genai as _google_genai_sdk  # type: ignore[attr-defined]
+except ImportError:
+    _google_genai_sdk = None
+if _google_genai_sdk is None:
+    try:
+        import google.generativeai as _google_generativeai_legacy  # type: ignore
+    except ImportError:
+        _google_generativeai_legacy = None
+else:
+    _google_generativeai_legacy = None
 
 # Always load .env from the project root (next to this file), not from the process CWD.
 # Gunicorn/systemd sometimes run with a different working directory, which breaks bare load_dotenv().
@@ -92,9 +105,23 @@ def ask_gemini(prompt: str, client_settings: dict = None) -> str:
     if not api_key:
         raise ValueError("Gemini APIキーが設定されていません。設定画面からAPIキーを入力してください。")
     model_name = settings.get("model", "gemini-2.5-flash")
-    client = google_genai.Client(api_key=api_key)
-    response = client.models.generate_content(model=model_name, contents=prompt)
-    text = (response.text or "").strip()
+
+    if _google_genai_sdk is not None:
+        client = _google_genai_sdk.Client(api_key=api_key)
+        response = client.models.generate_content(model=model_name, contents=prompt)
+        text = (response.text or "").strip()
+    elif _google_generativeai_legacy is not None:
+        _google_generativeai_legacy.configure(api_key=api_key)
+        gm = _google_generativeai_legacy.GenerativeModel(model_name)
+        response = gm.generate_content(prompt)
+        text = (response.text or "").strip() if response.text else ""
+    else:
+        raise ImportError(
+            "Gemini SDK が見つかりません。仮想環境で次を実行してください: "
+            "pip install google-genai   "
+            "（古いパッケージと競合する場合: pip uninstall google-generativeai && pip install google-genai）"
+        )
+
     if not text:
         raise ValueError("Geminiから空の応答が返りました。モデル名やAPIの制限を確認してください。")
     return text
