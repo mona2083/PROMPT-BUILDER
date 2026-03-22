@@ -1,11 +1,18 @@
 # main.py — Flask版
 
+# Load .env before any project imports that may read os.environ (Gunicorn CWD-safe: uses this file's directory).
+from pathlib import Path
+from dotenv import load_dotenv
+
+_APP_ROOT = Path(__file__).resolve().parent
+load_dotenv(_APP_ROOT / ".env", encoding="utf-8-sig", override=True)
+
 import threading
 import webbrowser
 from flask import Flask, render_template, request, jsonify
 
 from templates import LANG_UI, CATEGORIES, CATEGORY_KEY_MAP, TEMPLATES, build_prompt
-from gemini_client import ask_ai, AVAILABLE_MODELS
+from gemini_client import ask_ai, AVAILABLE_MODELS, _read_dotenv_manual
 from storage import (
     save_history, load_history, delete_history, clear_history,
     save_favorite, load_favorites, delete_favorite,
@@ -132,8 +139,14 @@ def api_delete_favorite(entry_id):
 def api_settings():
     settings = load_settings()
     gemini_file = bool((settings.get("api_key") or "").strip())
-    gemini_env = bool((os.getenv("GEMINI_API_KEY") or "").strip())
-    openai_ok = bool((settings.get("openai_api_key") or "").strip() or (os.getenv("OPENAI_API_KEY") or "").strip())
+    gemini_env = bool(
+        (os.getenv("GEMINI_API_KEY") or "").strip() or _read_dotenv_manual("GEMINI_API_KEY")
+    )
+    openai_ok = bool(
+        (settings.get("openai_api_key") or "").strip()
+        or (os.getenv("OPENAI_API_KEY") or "").strip()
+        or _read_dotenv_manual("OPENAI_API_KEY")
+    )
     # True when /api/ask_ai can fall back to settings.json or GEMINI_API_KEY / OPENAI_API_KEY (demo / hosted default)
     use_server_defaults_available = gemini_file or gemini_env or openai_ok
     return jsonify({

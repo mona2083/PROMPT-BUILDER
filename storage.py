@@ -2,6 +2,15 @@
 
 import json
 import os
+from pathlib import Path
+
+# All JSON paths are anchored to this package directory (not the process CWD).
+# Gunicorn/systemd may use a CWD where these files do not exist.
+_DATA_DIR = Path(__file__).resolve().parent
+
+
+def _data_file(name: str) -> str:
+    return str(_DATA_DIR / name)
 
 # ────────────────────────────────────────────
 # 汎用ユーティリティ
@@ -20,7 +29,7 @@ def _save(path: str, data) -> None:
 # ────────────────────────────────────────────
 # 履歴
 # ────────────────────────────────────────────
-HISTORY_FILE = "history.json"
+HISTORY_FILE = _data_file("history.json")
 MAX_HISTORY = 100
 
 def save_history(category: str, lang: str, prompt: str, answer: str = "") -> None:
@@ -48,7 +57,7 @@ def clear_history() -> None:
 # ────────────────────────────────────────────
 # お気に入り
 # ────────────────────────────────────────────
-FAVORITES_FILE = "favorites.json"
+FAVORITES_FILE = _data_file("favorites.json")
 
 def save_favorite(category: str, lang: str, prompt: str, answer: str = "") -> None:
     favs = _load(FAVORITES_FILE, [])
@@ -72,7 +81,7 @@ def delete_favorite(index: int) -> None:
 # ────────────────────────────────────────────
 # 設定
 # ────────────────────────────────────────────
-SETTINGS_FILE = "settings.json"
+SETTINGS_FILE = _data_file("settings.json")
 
 def load_settings() -> dict:
     return _load(SETTINGS_FILE, {})
@@ -84,7 +93,7 @@ def save_settings(settings: dict) -> None:
 # ────────────────────────────────────────────
 # プリセット
 # ────────────────────────────────────────────
-PRESETS_FILE = "presets.json"
+PRESETS_FILE = _data_file("presets.json")
 
 def load_presets() -> dict:
     return _load(PRESETS_FILE, {})
@@ -106,7 +115,7 @@ def delete_preset(category: str, name: str) -> None:
 # ────────────────────────────────────────────
 # フィールド別カスタム選択肢
 # ────────────────────────────────────────────
-FIELD_OPTIONS_FILE = "field_options.json"
+FIELD_OPTIONS_FILE = _data_file("field_options.json")
 
 def load_field_options(category: str, field_key: str) -> list:
     all_opts = _load(FIELD_OPTIONS_FILE, {})
@@ -137,7 +146,7 @@ def delete_field_option(category: str, field_key: str, value: str) -> None:
 # ────────────────────────────────────────────
 # AIへの指示プリセット
 # ────────────────────────────────────────────
-INSTRUCTIONS_FILE = "instructions.json"
+INSTRUCTIONS_FILE = _data_file("instructions.json")
 
 DEFAULT_INSTRUCTION_PRESETS = {
     "general": {
@@ -212,7 +221,7 @@ def delete_instruction_preset(key: str) -> None:
 # ────────────────────────────────────────────
 # グループ別プロフィール
 # ────────────────────────────────────────────
-PROFILE_FILE = "profile.json"
+PROFILE_FILE = _data_file("profile.json")
 
 # カテゴリ → プロフィールグループのマッピング
 CATEGORY_PROFILE_MAP = {

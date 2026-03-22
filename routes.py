@@ -5,7 +5,7 @@ import os
 from flask import Blueprint, render_template, request, jsonify
 
 from templates import TEMPLATES, build_prompt
-from gemini_client import ask_ai, AVAILABLE_MODELS
+from gemini_client import ask_ai, AVAILABLE_MODELS, _read_dotenv_manual
 import storage
 
 bp = Blueprint("prompt_builder_routes", __name__)
@@ -112,8 +112,14 @@ def api_delete_favorite(entry_id):
 def api_settings():
     settings = storage.load_settings()
     gemini_file = bool((settings.get("api_key") or "").strip())
-    gemini_env = bool((os.getenv("GEMINI_API_KEY") or "").strip())
-    openai_ok = bool((settings.get("openai_api_key") or "").strip() or (os.getenv("OPENAI_API_KEY") or "").strip())
+    gemini_env = bool(
+        (os.getenv("GEMINI_API_KEY") or "").strip() or _read_dotenv_manual("GEMINI_API_KEY")
+    )
+    openai_ok = bool(
+        (settings.get("openai_api_key") or "").strip()
+        or (os.getenv("OPENAI_API_KEY") or "").strip()
+        or _read_dotenv_manual("OPENAI_API_KEY")
+    )
     use_server_defaults_available = gemini_file or gemini_env or openai_ok
     return jsonify(
         {

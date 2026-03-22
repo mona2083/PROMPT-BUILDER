@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai as google_genai
 from storage import load_settings
 
 # Always load .env from the project root (next to this file), not from the process CWD.
@@ -13,6 +13,34 @@ _PROJECT_ROOT = Path(__file__).resolve().parent
 # utf-8-sig strips BOM; override=True so a blank GEMINI_API_KEY from the environment
 # does not block values from .env
 load_dotenv(_PROJECT_ROOT / ".env", encoding="utf-8-sig", override=True)
+
+
+def _read_dotenv_manual(key: str) -> str:
+    """If os.environ is missing the key, parse .env directly (handles odd server/Gunicorn cases)."""
+    path = _PROJECT_ROOT / ".env"
+    if not path.is_file():
+        return ""
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except OSError:
+        return ""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        if "=" not in line:
+            continue
+        name, _, val = line.partition("=")
+        if name.strip() != key:
+            continue
+        val = val.strip()
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
+            val = val[1:-1]
+        return val.strip()
+    return ""
+
 
 AVAILABLE_MODELS = {
     "gemini": [
@@ -59,13 +87,17 @@ def ask_gemini(prompt: str, client_settings: dict = None) -> str:
     api_key = (
         settings.get("api_key", "").strip()
         or (os.getenv("GEMINI_API_KEY") or "").strip()
+        or _read_dotenv_manual("GEMINI_API_KEY")
     )
     if not api_key:
         raise ValueError("Gemini APIキーが設定されていません。設定画面からAPIキーを入力してください。")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(settings.get("model", "gemini-2.5-flash"))
-    response = model.generate_content(prompt)
-    return response.text
+    model_name = settings.get("model", "gemini-2.5-flash")
+    client = google_genai.Client(api_key=api_key)
+    response = client.models.generate_content(model=model_name, contents=prompt)
+    text = (response.text or "").strip()
+    if not text:
+        raise ValueError("Geminiから空の応答が返りました。モデル名やAPIの制限を確認してください。")
+    return text
 
 
 def ask_openai(prompt: str, client_settings: dict = None) -> str:
@@ -77,6 +109,7 @@ def ask_openai(prompt: str, client_settings: dict = None) -> str:
     api_key = (
         settings.get("openai_api_key", "").strip()
         or (os.getenv("OPENAI_API_KEY") or "").strip()
+        or _read_dotenv_manual("OPENAI_API_KEY")
     )
     if not api_key:
         raise ValueError("OpenAI APIキーが設定されていません。設定画面からAPIキーを入力してください。")
