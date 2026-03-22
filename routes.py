@@ -1,5 +1,7 @@
 # routes.py — API routes (Flask blueprint)
 
+import os
+
 from flask import Blueprint, render_template, request, jsonify
 
 from templates import TEMPLATES, build_prompt
@@ -109,6 +111,10 @@ def api_delete_favorite(entry_id):
 @bp.route("/api/settings")
 def api_settings():
     settings = storage.load_settings()
+    gemini_file = bool((settings.get("api_key") or "").strip())
+    gemini_env = bool((os.getenv("GEMINI_API_KEY") or "").strip())
+    openai_ok = bool((settings.get("openai_api_key") or "").strip() or (os.getenv("OPENAI_API_KEY") or "").strip())
+    use_server_defaults_available = gemini_file or gemini_env or openai_ok
     return jsonify(
         {
             "api_key": settings.get("api_key", ""),
@@ -118,6 +124,7 @@ def api_settings():
             "provider": settings.get("provider", "gemini"),
             "gemini_models": AVAILABLE_MODELS["gemini"],
             "openai_models": AVAILABLE_MODELS["openai"],
+            "use_server_defaults_available": use_server_defaults_available,
         }
     )
 

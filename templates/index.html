@@ -584,6 +584,7 @@
         <div class="settings-label" id="settings-openai-model-label">モデル</div>
         <div class="radio-group" id="openai-model-group"></div>
       </div>
+      <div id="settings-server-hint" class="settings-server-hint" style="display:none;margin-top:10px;font-size:12px;color:#555;line-height:1.4;"></div>
       <button class="save-btn" id="settings-save-btn" onclick="saveSettings()">保存</button>
     </div>
   </div>
@@ -647,6 +648,8 @@ let generatedPrompt = "";
 let currentProfile = {};
 let profileFields = [];
 let currentProvider = "gemini";
+/** True when server has api_key / openai_api_key in settings.json or GEMINI_API_KEY in env (demo / hosted default). */
+let serverHasConfiguredKeys = false;
 
 const UI = {
   ja: {
@@ -825,7 +828,7 @@ window.onload = async () => {
   await loadSettingsUI();
   updateSendBtn();
   // 初回起動チェック：APIキーが未設定なら setup を表示
-  await checkFirstRun();
+  checkFirstRun();
 };
 
 // ────────────────────────────────────────────
@@ -841,11 +844,12 @@ function saveLocalSettings(settings) {
   try { localStorage.setItem("ai_prompt_settings", JSON.stringify(settings)); } catch(e) {}
 }
 
-async function checkFirstRun() {
+function checkFirstRun() {
   const local = getLocalSettings();
-  const hasKey = (local.api_key && local.api_key.trim()) ||
+  const hasLocalKey = (local.api_key && local.api_key.trim()) ||
                  (local.openai_api_key && local.openai_api_key.trim());
-  if (!hasKey) {
+  // ローカルにキーがなくても、サーバー既定（settings.json / 環境変数）があればセットアップを省略（デモ用）
+  if (!hasLocalKey && !serverHasConfiguredKeys) {
     document.getElementById("setup-modal").classList.add("open");
   }
 }
@@ -921,7 +925,41 @@ async function saveSetup() {
 
 function skipSetup() {
   document.getElementById("setup-modal").classList.remove("open");
-  openSettings();
+  // サーバー既定キーがないときだけ設定画面へ（デモ時はそのまま利用開始）
+  if (!serverHasConfiguredKeys) {
+    openSettings();
+  }
+}
+
+function updateSetupSkipWording() {
+  const setupSkipEl = document.querySelector(".setup-skip a");
+  if (!setupSkipEl) return;
+  const isJa = lang === "ja";
+  if (serverHasConfiguredKeys) {
+    setupSkipEl.textContent = isJa
+      ? "サーバー設定のAPIキーで使う（自分のキーは後から設定可）"
+      : "Use the host's API key (add your own later in Settings)";
+  } else {
+    setupSkipEl.textContent = isJa
+      ? "後で設定する（設定ボタンから変更できます）"
+      : "Skip for now (you can set it later in Settings)";
+  }
+}
+
+function refreshSettingsServerHint() {
+  const hint = document.getElementById("settings-server-hint");
+  if (!hint) return;
+  const local = getLocalSettings();
+  const hasLocalKey = (local.api_key && local.api_key.trim()) ||
+      (local.openai_api_key && local.openai_api_key.trim());
+  if (serverHasConfiguredKeys && !hasLocalKey) {
+    hint.style.display = "block";
+    hint.textContent = lang === "ja"
+      ? "※ APIキー欄が空のときは、サーバー（settings.json など）の既定キーが使われます（デモ・ポートフォリオ用）。"
+      : "※ When key fields are blank, the server's default keys from settings.json (or env) are used — for demos/portfolio.";
+  } else {
+    hint.style.display = "none";
+  }
 }
 
 function buildTabs() {
@@ -2031,7 +2069,6 @@ function updateStaticLabels() {
   const setupSubtitle = document.getElementById("setup-subtitle");
   const setupStepLabel = document.getElementById("setup-step-label");
   const setupSaveBtn = document.getElementById("setup-save-btn");
-  const setupSkipEl = document.querySelector(".setup-skip a");
   if (setupSubtitle) setupSubtitle.textContent = isJa
     ? "まず、使用するAIサービスを選んでください"
     : "Choose your AI service to get started";
@@ -2040,9 +2077,7 @@ function updateStaticLabels() {
     : "Step 1 — Choose AI Service";
   if (setupSaveBtn && !setupSaveBtn.disabled) setupSaveBtn.textContent = isJa
     ? "はじめる →" : "Get Started →";
-  if (setupSkipEl) setupSkipEl.textContent = isJa
-    ? "後で設定する（設定ボタンから変更できます）"
-    : "Skip for now (you can set it later in Settings)";
+  updateSetupSkipWording();
   const setupDescGemini = document.getElementById("setup-desc-gemini");
   const setupDescOpenAI = document.getElementById("setup-desc-openai");
   if (setupDescGemini) setupDescGemini.innerHTML = isJa
@@ -2050,6 +2085,7 @@ function updateStaticLabels() {
   if (setupDescOpenAI) setupDescOpenAI.innerHTML = isJa
     ? "GPT-4o対応<br>高精度" : "GPT-4o available<br>High accuracy";
   selectSetupProvider(setupProvider);
+  refreshSettingsServerHint();
 }
 
 function toggleLang() {
@@ -2075,8 +2111,11 @@ async function loadSettingsUI() {
   const local = getLocalSettings();
   const res = await fetch("/api/settings");
   const data = await res.json();
+  serverHasConfiguredKeys = !!data.use_server_defaults_available;
+  updateSetupSkipWording();
   document.getElementById("gemini-api-key-input").value = local.api_key || "";
   document.getElementById("openai-api-key-input").value = local.openai_api_key || "";
+  refreshSettingsServerHint();
   const geminiGroup = document.getElementById("gemini-model-group");
   geminiGroup.innerHTML = "";
   data.gemini_models.forEach(m => {

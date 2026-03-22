@@ -55,7 +55,7 @@ def ask_openai(prompt: str, client_settings: dict = None) -> str:
     except ImportError:
         raise ImportError("openaiライブラリが必要です: pip install openai")
     settings = _merge_settings(client_settings)
-    api_key = settings.get("openai_api_key", "").strip()
+    api_key = settings.get("openai_api_key", "").strip() or os.getenv("OPENAI_API_KEY", "")
     if not api_key:
         raise ValueError("OpenAI APIキーが設定されていません。設定画面からAPIキーを入力してください。")
     client = OpenAI(api_key=api_key)

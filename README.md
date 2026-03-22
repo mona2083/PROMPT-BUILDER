@@ -200,6 +200,15 @@ Your profile is automatically injected into every prompt.
 
 ## Deployment
 
+### Hosted demo: server default API keys (`settings.json`)
+
+For a **portfolio / public demo**, you can put Gemini / OpenAI keys in **`settings.json`** on the server (or set **`GEMINI_API_KEY`** in the environment). The web UI will:
+
+- **Skip the first-run API key wizard** when those defaults exist
+- Use **server keys** for `/api/ask_ai` whenever the visitor leaves key fields empty (local overrides still win if they paste their own key in Settings)
+
+> **Security:** Anyone who can open your site can potentially extract keys from network responses or abuse your quota. Use a **restricted / quota-capped** key for demos, or keep keys client-only for untrusted audiences.
+
 ### Render (Recommended)
 1. Push to a public GitHub repository
 2. Go to [render.com](https://render.com) 
@@ -214,7 +223,7 @@ Your profile is automatically injected into every prompt.
 
 4. Click **"Create Web Service"**
 
-> No environment variables needed — API keys are managed client-side.
+> API keys can be client-side only, or set on the server for a hosted demo — see [Hosted demo](#hosted-demo-server-default-api-keys-settingsjson) above.
 
 ### Railway
 1. Push to GitHub
