@@ -8,7 +8,7 @@ A Flask web app that transforms the way you interact with AI — by building con
 
 ## Live Demo
 
-🔗 *Deploy your own instance — see [Deployment](#deployment) section below*
+🔗 [Open App](http://138.68.47.65:8083/)
 
 ---
 
@@ -48,7 +48,7 @@ This app solves all of that automatically, by combining your saved profile with 
 - **5 profile groups**: Common / Tech / Life & Health / Cooking & Food / Study & Language
 - Saved once, auto-injected into every relevant prompt
 - Toggle on/off per prompt generation
-- Custom fields per group (e.g. "発芽玄米を常備している", "Living in Hawaii")
+- Custom fields per group (e.g. "I usually keep rice and pasta at home", "Living in Hawaii")
 
 ### 🎭 Role & Perspective System
 - Each category has a deeply defined expert role (skills + experience + stance)
